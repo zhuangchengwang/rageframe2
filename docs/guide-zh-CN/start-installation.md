@@ -24,7 +24,7 @@
 1、克隆
 
 ```
-git clone - git@github.com:zhuangchengwang/rageframe2.git
+git clone -b dev git@github.com:zhuangchengwang/rageframe2.git
 ```
 
 2、进入目录
