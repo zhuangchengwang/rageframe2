@@ -14,4 +14,10 @@ $config = yii\helpers\ArrayHelper::merge(
     require __DIR__ . '/../../wechat/config/main-local.php'
 );
 
-(new yii\web\Application($config))->run();
+function t( $message,$category='app',$params = [], $language = null)
+{
+    return Yii::t($category, $message, $params = [], $language = null);
+}
+$application = new yii\web\Application($config);
+$application->language = isset(Yii::$app->session['language']) ? Yii::$app->session['language'] : 'zh-CN';
+$application->run();

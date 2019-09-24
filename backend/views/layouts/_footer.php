@@ -12,7 +12,7 @@ use common\helpers\DebrisHelper;
         <div class="modal-content">
             <div class="modal-body">
                 <?= Html::img('@web/resources/dist/img/loading.gif', ['class' => 'loading']) ?>
-                <span>加载中... </span>
+                <span><?=t("加载中")?>... </span>
             </div>
         </div>
     </div>
@@ -23,7 +23,7 @@ use common\helpers\DebrisHelper;
         <div class="modal-content">
             <div class="modal-body">
                 <?= Html::img('@web/resources/dist/img/loading.gif', ['class' => 'loading']) ?>
-                <span>加载中... </span>
+                <span><?=t("加载中")?>... </span>
             </div>
         </div>
     </div>
@@ -34,7 +34,7 @@ use common\helpers\DebrisHelper;
         <div class="modal-content">
             <div class="modal-body">
                 <?= Html::img('@web/resources/dist/img/loading.gif', ['class' => 'loading']) ?>
-                <span>加载中... </span>
+                <span><?=t("加载中")?>... </span>
             </div>
         </div>
     </div>
@@ -43,13 +43,14 @@ use common\helpers\DebrisHelper;
 <div id="rfModalBody" class="hide">
     <div class="modal-body">
         <?= Html::img('@web/resources/dist/img/loading.gif', ['class' => 'loading']) ?>
-        <span>加载中... </span>
+        <span><?=t("加载中")?>... </span>
     </div>
 </div>
 
 <?php
 
 list($fullUrl, $pageConnector) = DebrisHelper::getPageSkipUrl();
+$rfa = t('请输入正确的页码');
 $script = <<<JS
     $(".pagination").append('&nbsp;&nbsp;前往&nbsp;<input id="invalue" type="text" class="pane rf-page-skip-input"/>&nbsp;页');
     $('.rf-page-skip-input').blur(function() {
@@ -62,7 +63,7 @@ $script = <<<JS
               location.href = "{$fullUrl}" + "{$pageConnector}page="+ parseInt(page);
         } else {
             $('#invalue').val('');
-            rfAffirm('请输入正确的页码');
+            rfAffirm("{$rfa}");
         }
     });
 JS;
@@ -134,10 +135,10 @@ $this->registerJs($script);
                 if (parseInt(data.code) === 200) {
                     if (self.hasClass("btn-success")) {
                         self.removeClass("btn-success").addClass("btn-default");
-                        self.text('禁用');
+                        self.text("<?=t('禁用')?>");
                     } else {
                         self.removeClass("btn-default").addClass("btn-success");
-                        self.text('启用');
+                        self.text("<?=t('启用')?>");
                     }
                 } else {
                     rfAffirm(data.message);
@@ -160,7 +161,7 @@ $this->registerJs($script);
 
         var sort = $(obj).val();
         if (isNaN(sort)) {
-            rfAffirm('排序只能为数字');
+            rfAffirm("<?=t('排序只能为数字')?>");
             return false;
         } else {
             $.ajax({

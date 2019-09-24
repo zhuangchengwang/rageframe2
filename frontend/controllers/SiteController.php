@@ -29,10 +29,15 @@ class SiteController extends Controller
         return [
             'access' => [
                 'class' => AccessControl::class,
-                'only' => ['logout', 'signup'],
+                'only' => ['logout', 'signup','language'],
                 'rules' => [
                     [
                         'actions' => ['signup'],
+                        'allow' => true,
+                        'roles' => ['?'],
+                    ],
+                    [
+                        'actions' => ['language'],
                         'allow' => true,
                         'roles' => ['?'],
                     ],
@@ -98,7 +103,19 @@ class SiteController extends Controller
     {
         return $this->render('index');
     }
-
+    /**
+     * 切换语言
+     * @param $language
+     */
+    public function actionLanguage($language) {
+        $session = Yii::$app->session;
+        $session->open();
+        if(isset($language)){
+            Yii::$app->session['language'] = $language;
+        }
+        //切换完语言哪来的返回到哪里，即reload
+        $this->goBack(Yii::$app->request->headers['Referer']);
+    }
     /**
      * 登录
      *

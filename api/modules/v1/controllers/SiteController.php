@@ -34,8 +34,19 @@ class SiteController extends OnAuthController
      *
      * @var array
      */
-    protected $optional = ['login', 'refresh', 'mobile-login', 'sms-code', 'register', 'up-pwd'];
-
+    protected $optional = ['login', 'refresh', 'mobile-login', 'sms-code', 'register', 'up-pwd','language'];
+    /**
+     * 切换语言
+     * @param $language
+     */
+    public function actionLanguage($language) {
+        $session = Yii::$app->session;
+        $session->open();
+        if(isset($language)){
+            Yii::$app->session['language'] = $language;
+        }
+        return ResultDataHelper::api(200, 'success');
+    }
     /**
      * 登录根据用户信息返回accessToken
      *

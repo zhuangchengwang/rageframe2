@@ -16,22 +16,22 @@ $form = ActiveForm::begin([
 
     <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
-        <h4 class="modal-title">基本信息</h4>
+        <h4 class="modal-title"><?=t("基本信息")?></h4>
     </div>
     <div class="modal-body">
         <?= $form->field($model, 'title')->textInput() ?>
-        <?= $form->field($model, 'name')->textInput()->hint('注意：标识唯一') ?>
+        <?= $form->field($model, 'name')->textInput()->hint(t('注意：标识唯一')) ?>
         <?= $form->field($model, 'sort')->textInput() ?>
         <?= $form->field($model, 'type')->dropDownList($configTypeList) ?>
-        <?= $form->field($model, 'cate_id')->dropDownList($cateDropDownList, ['prompt' => '请选择分类']) ?>
+        <?= $form->field($model, 'cate_id')->dropDownList($cateDropDownList, ['prompt' => t('请选择分类')]) ?>
         <?= $form->field($model, 'default_value')->textInput() ?>
-        <?= $form->field($model, 'extra')->textarea()->hint('如果是枚举型 需要配置该项') ?>
+        <?= $form->field($model, 'extra')->textarea()->hint(t('如果是枚举型 需要配置该项')) ?>
         <?= $form->field($model, 'remark')->textarea() ?>
         <?= $form->field($model, 'is_hide_remark')->checkbox() ?>
         <?= $form->field($model, 'status')->radioList(StatusEnum::$listExplain) ?>
     </div>
     <div class="modal-footer">
-        <button type="button" class="btn btn-white" data-dismiss="modal">关闭</button>
-        <button class="btn btn-primary" type="submit">保存</button>
+        <button type="button" class="btn btn-white" data-dismiss="modal"><?=t('关闭')?></button>
+        <button class="btn btn-primary" type="submit"><?=t('保存')?></button>
     </div>
 <?php ActiveForm::end(); ?>

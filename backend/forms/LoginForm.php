@@ -44,10 +44,10 @@ class LoginForm extends \common\models\forms\LoginForm
     public function attributeLabels()
     {
         return [
-            'username' => '用户名',
-            'rememberMe' => '记住我',
-            'password' => '密码',
-            'verifyCode' => '验证码',
+            'username' => t('用户名'),
+            'rememberMe' => t('记住我'),
+            'password' =>t( '密码'),
+            'verifyCode' => t('验证码'),
         ];
     }
 

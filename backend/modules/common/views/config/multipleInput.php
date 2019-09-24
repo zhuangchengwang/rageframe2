@@ -19,9 +19,9 @@ foreach ($option as $key => $v) {
 ?>
 
 <div class="form-group">
-    <?= Html::label($row['title'], $row['name'], ['class' => 'control-label demo']); ?>
+    <?= Html::label(t($row['title']), $row['name'], ['class' => 'control-label demo']); ?>
     <?php if ($row['is_hide_remark'] != StatusEnum::ENABLED) { ?>
-        (<?= $row['remark'] ?>)
+        (<?= t($row['remark']) ?>)
     <?php } ?>
     <div class="col-sm-push-10">
         <?= unclead\multipleinput\MultipleInput::widget([

@@ -10,7 +10,7 @@
     <li class="treeview rfLeftMenu rfLeftMenuAddon hide">
         <a href="#">
             <i class="<?= Yii::$app->params['addonsGroup'][$key]['icon']; ?> rf-i"></i>
-            <span><?= Yii::$app->params['addonsGroup'][$key]['title']; ?></span>
+            <span><?= t(Yii::$app->params['addonsGroup'][$key]['title']); ?></span>
             <span class="pull-right-container">
                 <i class="fa fa-angle-left pull-right"></i>
             </span>
@@ -20,7 +20,7 @@
                 <li>
                     <a class="J_menuItem" href="<?= $value['menuUrl']; ?>">
                         <i class="fa "></i>
-                        <?= $value['title']; ?>
+                        <?= t($value['title']); ?>
                     </a>
                 </li>
             <?php } ?>

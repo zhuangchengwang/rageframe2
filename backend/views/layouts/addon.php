@@ -27,16 +27,16 @@ AppAsset::register($this);
 <div class="wrapper-content">
     <section class="content-header">
         <a href="<?= Yii::$app->request->getUrl(); ?>" class="rfHeaderFont">
-            <i class="glyphicon glyphicon-refresh"></i> 刷新
+            <i class="glyphicon glyphicon-refresh"></i> <?=t('刷新')?>
         </a>
         <?php if (Yii::$app->request->referrer != Yii::$app->request->hostInfo . Yii::$app->request->getBaseUrl() . '/') { ?>
             <a href="javascript:history.go(-1)" class="rfHeaderFont">
-                <i class="fa fa-mail-reply"></i> 返回
+                <i class="fa fa-mail-reply"></i> <?=t('返回')?>
             </a>
         <?php } ?>
         <?php isset($this->params['breadcrumbs'])
-            ? array_unshift($this->params['breadcrumbs'], ['label' => Yii::$app->params['addon']['title']])
-            : $this->params['breadcrumbs'][] = ['label' => Yii::$app->params['addon']['title']];
+            ? array_unshift($this->params['breadcrumbs'], ['label' => t(Yii::$app->params['addon']['title'])])
+            : $this->params['breadcrumbs'][] = ['label' => t(Yii::$app->params['addon']['title'])];
         ?>
         <?= Breadcrumbs::widget([
             'tag' => 'ol',

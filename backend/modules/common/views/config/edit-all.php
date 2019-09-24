@@ -5,7 +5,7 @@ use common\helpers\Html;
 use yii\bootstrap\ActiveForm;
 use common\helpers\StringHelper;
 
-$this->title = '网站设置';
+$this->title = t('网站设置');
 $this->params['breadcrumbs'][] = ['label' => $this->title];
 ?>
 
@@ -17,7 +17,7 @@ $this->params['breadcrumbs'][] = ['label' => $this->title];
                     <?php foreach ($cates as $k => $cate) { ?>
                         <li <?php if ($k == 0){ ?>class="active"<?php } ?>>
                             <a aria-expanded="false" href="#tab-<?= $cate['id'] ?>"
-                               data-toggle="tab"> <?= $cate['title'] ?></a>
+                               data-toggle="tab"> <?= t($cate['title']) ?></a>
                         </li>
                     <?php } ?>
                 </ul>
@@ -31,7 +31,7 @@ $this->params['breadcrumbs'][] = ['label' => $this->title];
                                 <?php foreach ($cate['-'] as $item) { ?>
                                     <h2 style="font-size: 18px;padding-top: 0;margin-top: 0">
                                         <i class="icon ion-android-apps"></i>
-                                        <?= $item['title'] ?>
+                                        <?= t($item['title']) ?>
                                     </h2>
                                     <div class="col-sm-12" style="padding-left: 18px;">
                                         <?php foreach ($item['config'] as $row) { ?>
@@ -45,7 +45,7 @@ $this->params['breadcrumbs'][] = ['label' => $this->title];
                                 <div class="form-group">
                                     <div class="col-sm-12 text-center">
                                         <span type="submit" class="btn btn-primary"
-                                              onclick="present(<?= $cate['id'] ?>)">保存</span>
+                                              onclick="present(<?= $cate['id'] ?>)"><?=t("保存")?></span>
                                     </div>
                                 </div>
                                 <?php ActiveForm::end(); ?>
@@ -59,14 +59,14 @@ $this->params['breadcrumbs'][] = ['label' => $this->title];
     <div class="col-sm-3" id="explain">
         <div class="box">
             <div class="box-body">
-                <h4>说明：</h4>
-                <h6>单击标题名称获取配置标识</h6>
+                <h4><?=t("说明")?>：</h4>
+                <h6><?=t("单击标题名称获取配置标识")?></h6>
                 <div class="hr-line-dashed"></div>
                 <h5 class="tag-title"></h5>
                 <?= Html::input('text', 'demo', '',
                     ['class' => 'form-control', 'id' => 'demo', 'readonly' => 'readonly']); ?>
                 <div class="hr-line-dashed"></div>
-                <div class="clearfix">当前显示 ： <span id="demo-title">无</span></div>
+                <div class="clearfix"><?=t("当前显示")?> ： <span id="demo-title"><?=t("无")?></span></div>
             </div>
         </div>
     </div>

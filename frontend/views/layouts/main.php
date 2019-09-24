@@ -35,13 +35,13 @@ AppAsset::register($this);
         ],
     ]);
     $menuItems = [
-        ['label' => Yii::t('app', 'Home'), 'url' => ['/site/index']],
-        ['label' => Yii::t('app', 'About'), 'url' => ['/site/about']],
-        ['label' => Yii::t('app', 'Contact'), 'url' => ['/site/contact']],
+        ['label' => Yii::t('app', '首页'), 'url' => ['/site/index']],
+        ['label' => Yii::t('app', '关于'), 'url' => ['/site/about']],
+        ['label' => Yii::t('app', '联系'), 'url' => ['/site/contact']],
     ];
     if (Yii::$app->user->isGuest) {
-        $menuItems[] = ['label' => Yii::t('app', 'Signup'), 'url' => ['/site/signup']];
-        $menuItems[] = ['label' => Yii::t('app', 'Login'), 'url' => ['/site/login']];
+        $menuItems[] = ['label' => Yii::t('app', '注册'), 'url' => ['/site/signup']];
+        $menuItems[] = ['label' => Yii::t('app', '登录'), 'url' => ['/site/login']];
     } else {
         $menuItems[] = '<li>'
             . Html::beginForm(['/site/logout'], 'post')

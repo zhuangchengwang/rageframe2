@@ -27,6 +27,7 @@ class AppAsset extends AssetBundle
         'dist/css/wechat.css',
         'dist/css/rageframe.css',
         'dist/css/rageframe.widgets.css',
+        'plugins/layui/css/layui.css',
     ];
 
     public $js = [
@@ -41,6 +42,7 @@ class AppAsset extends AssetBundle
         'dist/js/template.js',
         'dist/js/rageframe.js',
         'dist/js/rageframe.widgets.js',
+        'plugins/layui/layui.all.js',
     ];
 
     public $depends = [

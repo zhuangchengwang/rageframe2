@@ -4,7 +4,7 @@ use yii\grid\GridView;
 use common\helpers\Html;
 use common\helpers\ImageHelper;
 
-$this->title = '会员信息';
+$this->title = t('会员信息');
 $this->params['breadcrumbs'][] = ['label' => $this->title];
 
 ?>
@@ -15,7 +15,7 @@ $this->params['breadcrumbs'][] = ['label' => $this->title];
             <div class="box-header">
                 <h3 class="box-title"><?= $this->title; ?></h3>
                 <div class="box-tools">
-                    <?= Html::create(['ajax-edit'], '创建', [
+                    <?= Html::create(['ajax-edit'], t('创建'), [
                         'data-toggle' => 'modal',
                         'data-target' => '#ajaxModal',
                     ]) ?>

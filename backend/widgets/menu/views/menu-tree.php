@@ -9,7 +9,7 @@ use common\enums\StatusEnum;
     <li class="treeview hide rfLeftMenu <?= ($item['cate']['is_default_show'] == StatusEnum::ENABLED) ? 'is_default_show' : ''; ?> rfLeftMenu-<?= $item['cate_id']; ?>">
         <?php if (!empty($item['-'])) { ?>
             <a href="#">
-                <i class="fa <?= $level == 1 ? $item['icon'] : ''; ?> rf-i"></i> <span><?= $item['title']; ?></span>
+                <i class="fa <?= $level == 1 ? $item['icon'] : ''; ?> rf-i"></i> <span><?= t($item['title']); ?></span>
                 <span class="pull-right-container">
                     <i class="fa fa-angle-left pull-right"></i>
                 </span>
@@ -23,7 +23,7 @@ use common\enums\StatusEnum;
         <?php } else { ?>
             <a class="J_menuItem" href="<?= $item['fullUrl'] == '#' ? '' : Url::to($item['fullUrl']); ?>">
                 <i class="fa <?= $level == 1 ? $item['icon'] : ''; ?> rf-i"></i>
-                <span><?= $item['title']; ?></span>
+                <span><?= t($item['title']); ?></span>
             </a>
         <?php } ?>
     </li>

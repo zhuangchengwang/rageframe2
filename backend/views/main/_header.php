@@ -4,15 +4,17 @@ use common\helpers\Url;
 use common\helpers\Auth;
 use common\enums\StatusEnum;
 use backend\widgets\notify\Notify;
+use yii\bootstrap\Nav;
+
 ?>
 
 <header class="main-header">
     <!-- Logo区域 -->
     <a href="<?= Yii::$app->homeUrl; ?>" class="logo">
         <!-- mini logo for sidebar mini 50x50 pixels -->
-        <span class="logo-mini"><?= Yii::$app->params['adminAcronym']; ?></span>
+        <span class="logo-mini"><?= t(Yii::$app->params['adminAcronym']); ?></span>
         <!-- logo for regular state and mobile devices -->
-        <span class="logo-lg"><?= Yii::$app->params['adminTitle']; ?></span>
+        <span class="logo-lg"><?= t(Yii::$app->params['adminTitle']); ?></span>
     </a>
     <nav class="navbar navbar-static-top">
         <!-- Sidebar toggle button-->
@@ -20,7 +22,7 @@ use backend\widgets\notify\Notify;
             <ul class="nav navbar-nav">
                 <li class="dropdown notifications-menu rfTopMenu">
                     <a href="#" class="sidebar-toggle" data-toggle="push-menu" role="button">
-                        <span class="sr-only">切换导航</span>
+                        <span class="sr-only"><?= t('切换导航'); ?></span>
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
@@ -31,7 +33,7 @@ use backend\widgets\notify\Notify;
                     <?php if (Auth::verify('cate:' . $cate['id'])) { ?>
                         <li class="dropdown notifications-menu rfTopMenu hide <?php if($cate['is_default_show'] == StatusEnum::ENABLED) echo 'rfTopMenuHover'; ?>" data-type="<?= $cate['id']; ?>" data-is_addon="<?= $cate['is_addon']; ?>">
                             <a class="dropdown-toggle">
-                                <i class="fa <?= $cate['icon']; ?>"></i> <?= $cate['title']; ?>
+                                <i class="fa <?= $cate['icon']; ?>"></i> <?= t($cate['title']); ?>
                             </a>
                         </li>
                     <?php } ?>
@@ -60,14 +62,36 @@ use backend\widgets\notify\Notify;
                         <li class="user-body">
                             <div class="row">
                                 <div class="col-xs-4 text-center">
-                                    <a href="<?= Url::to(['/sys/manager/personal']); ?>" class="J_menuItem" onclick="$('body').click();">个人信息</a>
+                                    <a href="<?= Url::to(['/sys/manager/personal']); ?>" class="J_menuItem" onclick="$('body').click();"><?=t("个人信息")?></a>
                                 </div>
                                 <div class="col-xs-4 text-center">
-                                    <a href="<?= Url::to(['/sys/manager/up-password']); ?>" class="J_menuItem" onclick="$('body').click();">修改密码</a>
+                                    <a href="<?= Url::to(['/sys/manager/up-password']); ?>" class="J_menuItem" onclick="$('body').click();"><?=t("修改密码")?></a>
                                 </div>
                                 <div class="col-xs-4 text-center">
-                                    <a href="<?= Url::to(['/main/clear-cache']); ?>" class="J_menuItem" onclick="$('body').click();">清理缓存</a>
+                                    <a href="<?= Url::to(['/main/clear-cache']); ?>" class="J_menuItem" onclick="$('body').click();"><?=t("清理缓存")?></a>
                                 </div>
+                            </div>
+                            <!-- /.row -->
+                        </li>
+                    </ul>
+                </li>
+                <li class="dropdown user user-menu">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                        <span class="hidden-xs"><?=t("切换语言")?></span>
+                    </a>
+                    <ul class="dropdown-menu" style="width: 50px">
+                        <!-- Menu Body -->
+                        <li class="user-body" style="padding: 5px">
+                            <div class="row">
+                                <div class="text-center" style="padding: 5px">
+                                    <a href="<?= Url::to(['/site/language?language=zh-CN']); ?>"  onclick="$('body').click();"><?=t("中文")?></a>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class=" text-center" style="padding: 5px">
+                                    <a href="<?= Url::to(['/site/language?language=vi']); ?>" onclick="$('body').click();"><?=t("越语")?></a>
+                                </div>
+
                             </div>
                             <!-- /.row -->
                         </li>

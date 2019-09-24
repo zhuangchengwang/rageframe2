@@ -22,6 +22,8 @@ return [
             'class' => 'frontend\modules\open\Module',
         ],
     ],
+//    'language' => 'zh-CN',
+    'language' => 'vi',
     'components' => [
         'request' => [
             'csrfParam' => '_csrf-frontend',
@@ -65,9 +67,22 @@ return [
         /** ------ i18n 国际化 ------ **/
         'i18n' => [
             'translations' => [
+//                'app' => [
+//                    'class' => 'yii\i18n\PhpMessageSource',
+//                    'basePath' => '@common/messages',
+//                    'sourceLanguage' => 'zh-CN',
+//                    'fileMap' => [
+//                        'app' => 'app.php',
+//                        'app/error' => 'error.php',
+//                    ],
+//                ],
+                '*' => [
+                    'class' => 'yii\i18n\PhpMessageSource'
+                ],
                 'app' => [
                     'class' => 'yii\i18n\PhpMessageSource',
-                    'basePath' => '@app/messages',
+                    'basePath' => '@common/messages',
+                    'sourceLanguage' => 'zh-CN',
                     'fileMap' => [
                         'app' => 'app.php',
                         'app/error' => 'error.php',
