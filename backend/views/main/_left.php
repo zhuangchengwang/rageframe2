@@ -21,6 +21,11 @@ use backend\widgets\menu\MenuLeftWidget;
                         <?= Yii::$app->services->authRole->getTitle() ?>
                     <?php } ?>
                 </a>
+                <br/>
+                <a href="#">
+                    <i class="fa fa-circle text-success"></i>
+                    ip:<?=Yii::$app->request->userIP?>
+                </a>
             </div>
         </div>
         <!-- 侧边菜单 -->
