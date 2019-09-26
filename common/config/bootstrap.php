@@ -19,3 +19,5 @@ Yii::setAlias('@wechatUrl', '');
 Yii::setAlias('@apiUrl', '');
 Yii::setAlias('@storageUrl', '');
 Yii::setAlias('@oauth2Url', '');
+global $REQUESTUUID;
+$REQUESTUUID=\Faker\Provider\Uuid::uuid();

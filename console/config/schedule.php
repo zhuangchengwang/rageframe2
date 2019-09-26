@@ -20,3 +20,10 @@ $schedule->command('msg-history/index')->cron('0 0 * * *')->sendOutputTo($filePa
  */
 $filePath = $path . 'sendMessage.log';
 $schedule->command('send-message/index')->cron('* * * * *')->sendOutputTo($filePath);
+/**
+ * 同步重要表更新日志到数据库
+ *
+ * 每分钟执行一次
+ */
+$filePath = $path . 'syn_index.log';
+$schedule->command('syn/index')->cron('* * * * *')->sendOutputTo($filePath);

@@ -14,6 +14,11 @@ return [
         'queue', // 队列系统
         'common\components\Init', // 加载默认的配置
     ],
+    'on beforeRequest' => function($event) {
+        \yii\base\Event::on(\yii\db\BaseActiveRecord::className(), \yii\db\BaseActiveRecord::EVENT_AFTER_UPDATE, ['common\components\UserOperateLog', 'writeu']);
+        \yii\base\Event::on(\yii\db\BaseActiveRecord::className(), \yii\db\BaseActiveRecord::EVENT_AFTER_INSERT, ['common\components\UserOperateLog', 'writei']);
+        \yii\base\Event::on(\yii\db\BaseActiveRecord::className(), \yii\db\BaseActiveRecord::EVENT_BEFORE_DELETE, ['common\components\UserOperateLog', 'writed']);
+    },
     'components' => [
         'i18n' => [
             'translations' => [
