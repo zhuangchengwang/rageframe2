@@ -8,15 +8,18 @@ class RedisHelper {
 
     /**
      * 包装key,避免多个平台使用同一台redis,同一个库,导致数据冲突
+     * 在已经运行的系统中如果突然改变前缀,可能会造成部分异常,原有的数据“丢失”
      * @param type $key
      * @return type
      */
     static function getKey($key) {
-        $ZZB_PUBCODE = Yii::$app->config->info("ZZB_PUBCODE");
-        if (!$ZZB_PUBCODE) {
-            $ZZB_PUBCODE="Have_No_ZZB_PUBCODE";
+        $pre = Yii::$app->debris->config("redis_pre");
+        if ($pre) {
+            $pre=$pre."_";
+        }else{
+            $pre = '';
         }
-        return $ZZB_PUBCODE . "_" . $key;
+        return $pre . $key;
     }
 
     /**
