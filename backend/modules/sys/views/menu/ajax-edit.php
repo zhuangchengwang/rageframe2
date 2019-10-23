@@ -14,6 +14,7 @@ $form = ActiveForm::begin([
         'template' => "<div class='col-sm-2 text-right'>{label}</div><div class='col-sm-10'>{input}\n{hint}\n{error}</div>",
     ]
 ]);
+$menuDropDownList[0]="无上级";
 ?>
 
     <div class="modal-header">

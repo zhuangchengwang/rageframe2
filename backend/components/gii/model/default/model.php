@@ -73,6 +73,19 @@ class <?= $className ?> extends <?= '\\' . ltrim($generator->baseClass, '\\') . 
 <?php endforeach; ?>
         ];
     }
+public function beforeSave($insert) {
+    if (parent::beforeSave($insert)) {
+        if ($insert) {
+            $this->createtime = date("Y-m-d H:i:s");
+            $this->updatetime = date("Y-m-d H:i:s");
+        } else {
+            $this->updatetime = date("Y-m-d H:i:s");
+        }
+        return true;
+    } else {
+        return false;
+    }
+}
 <?php foreach ($relations as $name => $relation): ?>
 
     /**
@@ -96,18 +109,6 @@ class <?= $className ?> extends <?= '\\' . ltrim($generator->baseClass, '\\') . 
     {
         return new <?= $queryClassFullName ?>(get_called_class());
     }
-    public function beforeSave($insert) {
-        if (parent::beforeSave($insert)) {
-            if ($insert) {
-                $this->createtime = date("Y-m-d H:i:s");
-                $this->updatetime = date("Y-m-d H:i:s");
-            } else {
-                $this->updatetime = date("Y-m-d H:i:s");
-            }
-            return true;
-        } else {
-             return false;
-        }
-    }
+
 <?php endif; ?>
 }
