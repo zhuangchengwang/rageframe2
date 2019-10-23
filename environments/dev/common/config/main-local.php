@@ -25,14 +25,16 @@ return [
         // session写入缓存配置
         'session' => [
             'class' => 'yii\redis\Session',
-            'redis' => [
-                'class' => 'yii\redis\Connection',
-                'hostname' => 'localhost',
-                'port' => 6379,
-                'database' => 0,
-            ],
+         // 'class' => 'yii\web\DbSession',
         ],
         */
+//        'redis' => [
+//            'class' => 'yii\redis\Connection',
+//            'hostname' => 'localhost',
+//            'port' => 6379,
+////            'password' => 'chenjixuan',
+////            'database' => 0,
+//        ],
         'mailer' => [
             'class' => 'yii\swiftmailer\Mailer',
             'viewPath' => '@common/mail',

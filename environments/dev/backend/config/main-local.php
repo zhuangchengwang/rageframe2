@@ -19,6 +19,7 @@ if (!YII_ENV_TEST) {
     $config['bootstrap'][] = 'gii';
     $config['modules']['gii'] = [
         'class' => 'yii\gii\Module',
+//        'allowedIPs' => ['127.0.0.1', '::1','140.224.*.*'],
         'generators' => [
             'crud' => [
                 'class' => \backend\components\gii\crud\Generator::class,
