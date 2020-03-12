@@ -24,7 +24,8 @@
 1、克隆
 
 ```
-git clone -b dev https://github.com/zhuangchengwang/rageframe2.git
+cat ~/.ssh/id_rsa.pub  获取key  并在GitHub上配置 https://github.com/settings/keys
+git clone -b dev https://github.com/zhuangchengwang/rageframe2.git  【项目目录名】
 ```
 
 2、进入目录
