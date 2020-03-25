@@ -26,7 +26,7 @@ $this->params['breadcrumbs'][] = ['label' => $this->title];
                     'dataProvider' => $dataProvider,
                     'filterModel' => $searchModel,
                     //重新定义分页样式
-                    'tableOptions' => ['class' => 'table table-hover'],
+                    'tableOptions' => ['class' => 'table table-hover rf-table'],
                     'columns' => [
                         [
                             'class' => 'yii\grid\SerialColumn',
@@ -51,16 +51,38 @@ $this->params['breadcrumbs'][] = ['label' => $this->title];
                             'attribute' => 'username',
                             'filter' => false, //不显示搜索框
                         ],
+                        [
+                            'attribute' => 'level.name',
+                            'value' => function ($model) {
+                                return Html::tag('span', $model->level->name ?? '', [
+                                        'class' => 'label label-primary'
+                                ]);
+                            },
+                            'filter' => false,
+                            'format' => 'raw',
+                        ],
                         'realname',
-                        'mobile',
+                        [
+                            'attribute' => 'mobile',
+                            'headerOptions' => ['class' => 'col-md-1'],
+                        ],
                         [
                             'label' => '账户金额',
                             'filter' => false, //不显示搜索框
                             'value' => function ($model) {
-                                return "余额：" . $model->account->user_money . '<br>' .
-                                    "累积金额：" . $model->account->accumulate_money . '<br>' .
-                                    "积分：" . $model->account->user_integral . '<br>' .
-                                    "累计积分：" . $model->account->accumulate_integral;
+                                return "剩余：" . $model->account->user_money . '<br>' .
+                                    "累计：" . $model->account->accumulate_money . '<br>' .
+                                    "累计消费：" . abs($model->account->consume_money);
+                            },
+                            'format' => 'raw',
+                        ],
+                        [
+                            'label' => '账户积分',
+                            'filter' => false, //不显示搜索框
+                            'value' => function ($model) {
+                                return "剩余：" . $model->account->user_integral . '<br>' .
+                                    "累计：" . $model->account->accumulate_integral . '<br>' .
+                                    "累计消费：" . abs($model->account->consume_integral);
                             },
                             'format' => 'raw',
                         ],

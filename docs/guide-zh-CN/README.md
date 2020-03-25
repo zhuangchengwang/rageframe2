@@ -6,6 +6,7 @@
 - [环境搭建](start-environment.md)
 - [系统安装](start-installation.md)
 - [伪静态](start-rewrite.md)
+- [如何提问](start-questions.md)
 - [常见问题](start-issue.md)
 - [更新历史](start-update-log.md)
 
@@ -17,10 +18,12 @@
 - [表单控件](sys-widget.md)
 - [系统组件](sys-subassembly.md)
 - [系统JS](sys-js-method.md)
+- [Gii](sys-gii.md)
 - [权限控制](sys-auth.md)
 - [公用支付](sys-payment.md)
 - [消息队列](sys-queue.md)
 - [服务层](sys-service.md)
+- [WebSocket](sys-websocket.md)
 - 公用服务
 - [RESTful Api](sys-restful-api.md)
 - [数据字典](sys-data-dictionary.md)
@@ -39,11 +42,10 @@
 - 消息概述和响应
 - [Access Token](wechat-token.md)
 
-#### 模块开发
+#### 插件模块开发
 
 - [模块介绍及目录](addon-introduce-catalog.md)
 - [模块开发流程](addon-flow.md)
-- [钩子说明及调用](addon-hook.md)
 - [模块辅助说明](addon-helper.md)
 
 #### Api
@@ -75,7 +77,7 @@
 - RegularHelper - 正则验证辅助类
 - HashidsHelper - ID加密辅助类
 - UploadHelper - 上传辅助类
-- [ResultDataHelper](helper-result-data.md) - 格式化数据返回辅助类
+- [ResultHelper](helper-result-data.md) - 格式化数据返回辅助类
 - [ExcelHelper](helper-excel.md) - Excel导入导出辅助类
 - ...
 
@@ -83,11 +85,11 @@
 
 - [安全防范](php-safety.md)
 - [SearchModel](component-search-model.md)
-- Curd
 - [应用配置独立域名](independent-app-domain-name.md)
 - [代码模板](system-code-template.md)
-- [代码提示/线上性能优化](system-optimize.md)
-- [扩展依赖安装使用](system-relyon.md)
+- [线上性能优化](system-optimize.md)
+- [团队编辑器代码规范](php-by-team.md)
 - [PHP编程规范](php-standard.md)
 - [Yii2核心框架代码风格](core-code-style.md)
+- [扩展依赖安装使用](system-relyon.md)
 - [网址收录](append-website.md)

@@ -2,6 +2,8 @@
 
 namespace services\common;
 
+use Yii;
+use common\enums\AppEnum;
 use common\components\Service;
 use common\models\common\AddonsConfig;
 
@@ -14,12 +16,14 @@ class AddonsConfigService extends Service
 {
     /**
      * @param $name
+     * @param $merchant_id
      * @return array|\yii\db\ActiveRecord|null
      */
-    public function findByName($name)
+    public function findByName($name, $app_id, $merchant_id = '')
     {
         return AddonsConfig::find()
-            ->where(['addons_name' => $name, 'merchant_id' => $this->getMerchantId()])
+            ->where(['addons_name' => $name, 'app_id' => $app_id])
+            ->andFilterWhere(['merchant_id' => $merchant_id])
             ->one();
     }
 }

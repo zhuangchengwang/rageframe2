@@ -11,6 +11,7 @@ use common\helpers\ArrayHelper;
 use common\enums\SubscriptionActionEnum;
 use common\enums\SubscriptionReasonEnum;
 use common\enums\MessageLevelEnum;
+use common\queues\ActionLogJob;
 use Zhuzhichao\IpLocationZh\Ip;
 
 /**
@@ -21,21 +22,11 @@ use Zhuzhichao\IpLocationZh\Ip;
 class ActionLogService extends Service
 {
     /**
-     * @param $app_id
-     * @param $user_id
-     * @param int $limit
-     * @return array|\yii\db\ActiveRecord[]
+     * 队列
+     *
+     * @var bool
      */
-    public function findByAppIdAndManagerId($app_id, $user_id, $limit = 12)
-    {
-        return ActionLog::find()
-            ->where(['app_id' => $app_id, 'user_id' => $user_id, 'status' => StatusEnum::ENABLED])
-            ->andWhere(['in', 'behavior', ['login', 'logout']])
-            ->limit($limit)
-            ->orderBy('id desc')
-            ->asArray()
-            ->all();
-    }
+    public $queueSwitch = false;
 
     /**
      * 行为日志
@@ -75,7 +66,25 @@ class ActionLogService extends Service
             $model->city = $ipData[2];
         }
 
-        $model->save();
+        if ($this->queueSwitch == true) {
+            $messageId = Yii::$app->queue->push(new ActionLogJob([
+                'actionLog' => $model,
+                'level' => $level,
+            ]));
+
+            return $messageId;
+        }
+
+        $this->realCreate($model, $level);
+    }
+
+    /**
+     * @param ActionLog $actionLog
+     * @param $level
+     */
+    public function realCreate(ActionLog $actionLog, $level)
+    {
+        $actionLog->save();
 
         if (!empty($level)) {
             // 创建订阅消息
@@ -85,13 +94,30 @@ class ActionLogService extends Service
                 MessageLevelEnum::ERROR => SubscriptionActionEnum::BEHAVIOR_ERROR,
             ];
 
-            Yii::$app->services->sysNotify->createRemind(
-                $model->id,
+            Yii::$app->services->backendNotify->createRemind(
+                $actionLog->id,
                 SubscriptionReasonEnum::BEHAVIOR_CREATE,
                 $actions[$level],
-                $model['user_id'],
-                MessageLevelEnum::$listExplain[$level] . "行为：$url"
+                $actionLog['user_id'],
+                MessageLevelEnum::getValue($level) . "行为：$actionLog->url"
             );
         }
+    }
+
+    /**
+     * @param $app_id
+     * @param $user_id
+     * @param int $limit
+     * @return array|\yii\db\ActiveRecord[]
+     */
+    public function findByAppId($app_id, $user_id, $limit = 12)
+    {
+        return ActionLog::find()
+            ->where(['app_id' => $app_id, 'user_id' => $user_id, 'status' => StatusEnum::ENABLED])
+            ->andWhere(['in', 'behavior', ['login', 'logout']])
+            ->limit($limit)
+            ->orderBy('id desc')
+            ->asArray()
+            ->all();
     }
 }

@@ -3,12 +3,13 @@
 namespace addons\RfDevTool;
 
 use addons\RfDevTool\common\components\Bootstrap;
+use common\components\BaseAddonConfig;
 
 /**
  * Class Addon
  * @package addons\RfDevTool
  */
-class AddonConfig
+class AddonConfig extends BaseAddonConfig
 {
     /**
      * 基础信息
@@ -34,8 +35,10 @@ class AddonConfig
     public $appsConfig = [
         'backend' => 'common/config/backend.php',
         'frontend' => 'common/config/frontend.php',
-        'wechat' => 'common/config/wechat.php',
+        'merchant' => 'common/config/merchant.php',
+        'html5' => 'common/config/html5.php',
         'api' => 'common/config/api.php',
+        'oauth2' => 'common/config/oauth2.php',
     ];
 
     /**

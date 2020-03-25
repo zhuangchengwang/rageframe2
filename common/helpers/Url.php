@@ -22,12 +22,17 @@ class Url extends BaseUrl
      */
     public static function to($url = '', $scheme = false)
     {
-        if (is_array($url) && Yii::$app->id != AppEnum::BACKEND) {
+        if (is_array($url) && !in_array(Yii::$app->id, [AppEnum::BACKEND, AppEnum::MERCHANT])) {
             $url = static::isMerchant($url);
         }
 
-        if (Yii::$app->params['inAddon']) {
-            return urldecode(parent::to(self::regroupUrl($url), $scheme));
+        // 插件默认加上
+        if (is_array($url) && Yii::$app->params['inAddon'] && substr($url[0], 0, 1) == '/') {
+            $name = '/' . Yii::$app->params['addonName'];
+
+            if (substr($url[0], 0, strlen($name)) != $name) {
+                $url[0] = $name . $url[0];
+            }
         }
 
         return parent::to($url, $scheme);
@@ -41,10 +46,11 @@ class Url extends BaseUrl
      * @return string
      * @throws \yii\base\InvalidConfigException
      */
-    public static function toFront(array $url, $scheme = false)
+    public static function toFront(array $url, $absolute = false, $scheme = false)
     {
         $domainName = Yii::getAlias('@frontendUrl');
-        return static::create($url, $scheme, $domainName, '', 'urlManagerFront');
+
+        return static::create($url, $absolute, $scheme, $domainName, '', 'urlManagerFront');
     }
 
     /**
@@ -55,10 +61,11 @@ class Url extends BaseUrl
      * @return string
      * @throws \yii\base\InvalidConfigException
      */
-    public static function toWechat(array $url, $scheme = false)
+    public static function toHtml5(array $url, $absolute = false, $scheme = false)
     {
-        $domainName = Yii::getAlias('@wechatUrl');
-        return static::create($url, $scheme, $domainName, '/wechat', 'urlManagerWechat');
+        $domainName = Yii::getAlias('@html5Url');
+
+        return static::create($url, $absolute, $scheme, $domainName, '/html5', 'urlManagerHtml5');
     }
 
     /**
@@ -69,10 +76,11 @@ class Url extends BaseUrl
      * @return string
      * @throws \yii\base\InvalidConfigException
      */
-    public static function toOAuth2(array $url, $scheme = false)
+    public static function toOAuth2(array $url, $absolute = false, $scheme = false)
     {
         $domainName = Yii::getAlias('@oauth2Url');
-        return static::create($url, $scheme, $domainName, '/oauth2', 'urlManagerOAuth2');
+
+        return static::create($url, $absolute, $scheme, $domainName, '/oauth2', 'urlManagerOAuth2');
     }
 
     /**
@@ -83,10 +91,11 @@ class Url extends BaseUrl
      * @return string
      * @throws \yii\base\InvalidConfigException
      */
-    public static function toStorage(array $url, $scheme = false)
+    public static function toStorage(array $url, $absolute = false, $scheme = false)
     {
         $domainName = Yii::getAlias('@storageUrl');
-        return static::create($url, $scheme, $domainName, '/storage', 'urlManagerStorage');
+
+        return static::create($url, $absolute, $scheme, $domainName, '/storage', 'urlManagerStorage');
     }
 
     /**
@@ -97,10 +106,11 @@ class Url extends BaseUrl
      * @return string
      * @throws \yii\base\InvalidConfigException
      */
-    public static function toApi(array $url, $scheme = false)
+    public static function toApi(array $url, $absolute = false, $scheme = false)
     {
         $domainName = Yii::getAlias('@apiUrl');
-        return static::create($url, $scheme, $domainName, '/api', 'urlManagerApi');
+
+        return static::create($url, $absolute, $scheme, $domainName, '/api', 'urlManagerApi');
     }
 
     /**
@@ -124,15 +134,12 @@ class Url extends BaseUrl
      */
     public static function removeMerchantIdUrl(string $action, array $url, $scheme = false)
     {
-        if (true == Yii::$app->params['merchantOpen']) {
-            Yii::$app->params['merchantOpen'] = false;
-            $url = self::$action($url, $scheme);
-            Yii::$app->params['merchantOpen'] = true;
+        $realAppId = Yii::$app->params['realAppId'];
+        Yii::$app->params['realAppId'] = AppEnum::BACKEND;
+        $url = self::$action($url, $scheme);
+        Yii::$app->params['realAppId'] = $realAppId;
 
-            return $url;
-        }
-
-        return self::$action($url, $scheme);
+        return $url;
     }
 
     /**
@@ -144,7 +151,7 @@ class Url extends BaseUrl
      * @return string
      * @throws \yii\base\InvalidConfigException
      */
-    protected static function create($url, $scheme, $domainName, $appId, $key)
+    protected static function create($url, $absolute, $scheme, $domainName, $appId, $key)
     {
         $url = static::isMerchant($url);
         Yii::$app->params['inAddon'] && $url = self::regroupUrl($url);
@@ -166,21 +173,6 @@ class Url extends BaseUrl
     }
 
     /**
-     * @param array $url
-     * @return array
-     */
-    protected static function isMerchant(array $url)
-    {
-        if (true === Yii::$app->params['merchantOpen']) {
-            $url = ArrayHelper::merge([
-                'merchant_id' => Yii::$app->services->merchant->getId()
-            ], $url);
-        }
-
-        return $url;
-    }
-
-    /**
      * 重组url
      *
      * @param array $url 重组地址
@@ -193,37 +185,24 @@ class Url extends BaseUrl
             return $url;
         }
 
-        $addonsUrl = [];
-        $addonsUrl[0] = '/addons/' . StringHelper::toUnderScore(Yii::$app->params['addonInfo']['name']) . '/' . self::regroupRoute($url);
+        $url[0] = Yii::$app->params['addonName'] . '/' . $url[0];
 
-        // 删除默认跳转url
-        unset($url[0]);
-        foreach ($url as $key => $vo) {
-            $addonsUrl[$key] = $vo;
-        }
-
-        return $addonsUrl;
+        return $url;
     }
 
     /**
-     * 重组路由
-     *
      * @param array $url
-     * @return string
+     * @return array
      */
-    public static function regroupRoute($url)
+    protected static function isMerchant(array $url)
     {
-        $oldRoute = Yii::$app->params['addonInfo']['oldRoute'];
-        $route = $url[0];
-        // 如果只填写了方法转为控制器方法
-        if (count(explode('/', $route)) < 2) {
-            $oldRoute = explode('/', $oldRoute);
-            $oldRoute[count($oldRoute) - 1] = $url[0];
-            $route = implode('/', $oldRoute);
-
-            unset($oldRoute);
+        $merchant_id = Yii::$app->services->merchant->getId();
+        if (Yii::$app->params['realAppId'] != AppEnum::BACKEND && !empty($merchant_id)) {
+            $url = ArrayHelper::merge([
+                'merchant_id' => $merchant_id,
+            ], $url);
         }
 
-        return $route;
+        return $url;
     }
 }

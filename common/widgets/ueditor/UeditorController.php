@@ -1,6 +1,7 @@
 <?php
 namespace common\widgets\ueditor;
 
+use common\helpers\ResultHelper;
 use Yii;
 use yii\helpers\Url;
 use yii\web\Controller;
@@ -8,9 +9,8 @@ use yii\filters\AccessControl;
 use common\helpers\ArrayHelper;
 use common\helpers\UploadHelper;
 use common\enums\StatusEnum;
-use common\models\common\Attachment;
 use yii\helpers\Json;
-use common\models\wechat\Attachment as WechatAttachment;
+use addons\Wechat\common\models\Attachment as WechatAttachment;
 use League\Flysystem\Adapter\Local;
 use League\Flysystem\Filesystem;
 
@@ -260,10 +260,16 @@ class UeditorController extends Controller
         foreach ($source as $imgUrl) {
             try {
                 $upload->save($upload->verifyUrl($imgUrl));
-                $baseInfo = $upload->getBaseInfo();
+                if ($file = Yii::$app->services->attachment->findByMd5($upload->config['md5'])) {
+                    $url = $file['base_url'];
+                } else {
+                    $baseInfo = $upload->getBaseInfo();
+                    $url = $baseInfo['url'];
+                }
+
                 $list[] = [
                     'state' => 'SUCCESS',
-                    'url' => $baseInfo['url'],
+                    'url' => $url,
                     'source' => $imgUrl
                 ];
             } catch (\Exception $e) {
@@ -338,7 +344,7 @@ class UeditorController extends Controller
         $files = [];
         foreach ($models as $model) {
             $files[] = [
-                'url' => urldecode(Url::to(['/wechat/analysis/image', 'attach' => $model['media_url']])),
+                'url' => urldecode(Url::to(['addons/rf-wechat/analysis/image', 'attach' => $model['media_url']])),
                 'mtime' => $model['created_at']
             ];
         }

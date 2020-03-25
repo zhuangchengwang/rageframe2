@@ -6,7 +6,7 @@ use Yii;
 use common\models\base\SearchModel;
 use common\models\common\SmsLog;
 use common\enums\StatusEnum;
-use common\helpers\ResultDataHelper;
+use common\helpers\ResultHelper;
 use backend\controllers\BaseController;
 
 /**
@@ -27,15 +27,14 @@ class SmsLogController extends BaseController
             'scenario' => 'default',
             'partialMatchAttributes' => ['mobile'], // 模糊查询
             'defaultOrder' => [
-                'id' => SORT_DESC
+                'id' => SORT_DESC,
             ],
-            'pageSize' => $this->pageSize
+            'pageSize' => $this->pageSize,
         ]);
 
         $dataProvider = $searchModel
             ->search(Yii::$app->request->queryParams);
         $dataProvider->query
-            ->andFilterWhere(['merchant_id' => $this->getMerchantId()])
             ->andWhere(['>=', 'status', StatusEnum::DISABLED]);
 
         return $this->render($this->action->id, [
@@ -52,12 +51,8 @@ class SmsLogController extends BaseController
      */
     public function actionView($id)
     {
-        $model = SmsLog::find()
-            ->where(['id' => $id])
-            ->one();
-
         return $this->renderAjax($this->action->id, [
-            'model' => $model,
+            'model' => SmsLog::findOne($id),
         ]);
     }
 
@@ -69,7 +64,8 @@ class SmsLogController extends BaseController
     {
         if (!empty($type)) {
             $data = Yii::$app->services->sms->stat($type);
-            return ResultDataHelper::json(200, '获取成功', $data);
+
+            return ResultHelper::json(200, '获取成功', $data);
         }
 
         return $this->renderAjax($this->action->id, [

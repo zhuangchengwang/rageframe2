@@ -5,7 +5,9 @@ namespace services\common;
 use Yii;
 use yii\helpers\Json;
 use common\components\Service;
+use common\helpers\ArrayHelper;
 use common\models\common\AddonsBinding;
+use common\helpers\StringHelper;
 
 /**
  * Class AddonsBindingService
@@ -15,45 +17,24 @@ use common\models\common\AddonsBinding;
 class AddonsBindingService extends Service
 {
     /**
-     * 获取所有的重组数据
+     * 创建菜单和入口
      *
-     * @param $names
-     * @return array
-     */
-    public function regroupMenuByNames($names)
-    {
-        $list = $this->getMenuListByNames($names);
-        $data = [];
-        foreach ($list as $item) {
-            $key = $item['addons_name'] . '|' . $item['route'];
-            $data[$key] = $item;
-        }
-
-        return $data;
-    }
-
-    /**
-     * @param $names
-     * @return array|\yii\db\ActiveRecord[]
-     */
-    public function getMenuListByNames($names)
-    {
-        return AddonsBinding::find()
-            ->where(['entry' => 'menu'])
-            ->andWhere(['in', 'addons_name', $names])
-            ->asArray()
-            ->all();
-    }
-
-    /**
-     * @param $allCover
-     * @param $allMenu
-     * @param $addons_name
+     * @param array $allMenu
+     * @param array $allCover
+     * @param string $addons_name
      * @throws \yii\db\Exception
      */
-    public function create($allMenu, $allCover, $addons_name)
+    public function create(array $allMenu, array $allCover, string $addons_name)
     {
         AddonsBinding::deleteAll(['addons_name' => $addons_name]);
+        // 重组数组
+        foreach ($allMenu as $key => $menu) {
+            $allMenu[$key] = ArrayHelper::regroupMapToArr($menu);
+        }
+
+        foreach ($allCover as $key => $cover) {
+            $allCover[$key] = ArrayHelper::regroupMapToArr($cover);
+        }
 
         $rows = [];
         foreach ($allCover as $key => $item) {
@@ -73,9 +54,10 @@ class AddonsBindingService extends Service
 
         foreach ($allMenu as $key => $item) {
             foreach ($item as $k => $value) {
+                $route = $value['route'] ?? '';
                 $row = [];
                 $row['title'] = $value['title'] ?? '';
-                $row['route'] = $value['route'] ?? '';
+                $row['route'] = '/' . StringHelper::toUnderScore($addons_name) . '/' . $route;
                 $row['icon'] = $value['icon'] ?? '';
                 $row['params'] = $value['params'] ?? [];
                 $row['app_id'] = $key;
@@ -88,6 +70,20 @@ class AddonsBindingService extends Service
 
         $field = ['title', 'route', 'icon', 'params', 'app_id', 'entry', 'addons_name'];
         // 批量插入数据
-        Yii::$app->db->createCommand()->batchInsert(AddonsBinding::tableName(), $field, $rows)->execute();
+        !empty($rows) && Yii::$app->db->createCommand()->batchInsert(AddonsBinding::tableName(), $field, $rows)->execute();
+    }
+
+    /**
+     * @param array $names
+     * @param string $entry
+     * @return array|\yii\db\ActiveRecord[]
+     */
+    public function findByNames(array $names, $entry = 'menu')
+    {
+        return AddonsBinding::find()
+            ->where(['entry' => $entry])
+            ->andWhere(['in', 'addons_name', $names])
+            ->asArray()
+            ->all();
     }
 }

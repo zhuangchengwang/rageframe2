@@ -8,7 +8,6 @@ use common\components\payment\AliPay;
 use common\components\payment\UnionPay;
 use common\components\payment\WechatPay;
 use common\helpers\ArrayHelper;
-use common\helpers\Url;
 
 /**
  * 支付组件
@@ -31,7 +30,9 @@ class Pay extends Component
 
     public function init()
     {
-        $this->rfConfig = Yii::$app->debris->configAll();
+        // 默认读后台配置可切换为根据商户来获取配置
+        $this->rfConfig = Yii::$app->debris->backendConfigAll();
+        // $this->rfConfig = Yii::$app->debris->merchantConfigAll();
 
         parent::init();
     }

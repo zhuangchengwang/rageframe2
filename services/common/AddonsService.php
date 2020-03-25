@@ -2,7 +2,9 @@
 
 namespace services\common;
 
+use common\enums\AppEnum;
 use Yii;
+use yii\db\ActiveQuery;
 use yii\helpers\Json;
 use yii\web\NotFoundHttpException;
 use common\helpers\Url;
@@ -12,7 +14,9 @@ use common\enums\StatusEnum;
 use common\components\Service;
 use common\helpers\StringHelper;
 use common\helpers\ArrayHelper;
-use common\enums\CacheKeyEnum;
+use common\enums\CacheEnum;
+use common\components\BaseAddonConfig;
+use common\helpers\Auth;
 use Overtrue\Pinyin\Pinyin;
 
 /**
@@ -27,54 +31,31 @@ class AddonsService extends Service
      */
     public function getMenus()
     {
-        $with = ['authChildMenuByBackend'];
-        Yii::$app->services->auth->isSuperAdmin() && $with = ['bindingIndexMenu'];
-
         $models = Addons::find()
             ->select(['title', 'name', 'group'])
-            ->with($with)
+            ->with('bindingMenu')
             ->asArray()
             ->all();
 
-        // 所有菜单信息
-        $allAddonsMenu = [];
-        if (!Yii::$app->services->auth->isSuperAdmin()) {
-            $data = array_column($models, 'authChildMenuByBackend');
-            $names = array_column($data, 'addons_name');
-            $allAddonsMenu = Yii::$app->services->addonsBinding->regroupMenuByNames($names);
-        }
-
+        $isSuperAdmin = Yii::$app->services->auth->isSuperAdmin();
         foreach ($models as $k => &$model) {
-            $addon = StringHelper::toUnderScore($model['name']);
+            $model['menuUrl'] = '';
 
-            // 超级管理员
-            if (Yii::$app->services->auth->isSuperAdmin()) {
-                $bindingIndexMenu = $model['bindingIndexMenu'];
+            foreach ($model['bindingMenu'] as $bindingMenu) {
+                if (isset($bindingMenu['route']) && empty($model['menuUrl'])) {
+                    $params = isset($bindingMenu['params']) ? Json::decode($bindingMenu['params']) : [];
+                    $model['menuUrl'] = Url::to(ArrayHelper::merge([$bindingMenu['route']], $params));
 
-                if (isset($bindingIndexMenu['route'])) {
-                    $url = ['/addons/' . $addon . '/' . $bindingIndexMenu['route']];
-                    $params = isset($bindingIndexMenu['params']) ? Json::decode($bindingIndexMenu['params']) : [];
-                    $model['menuUrl'] = Url::to(ArrayHelper::merge($url, $params));
+                    if (!$isSuperAdmin && !Auth::verify($bindingMenu['route'])) {
+                        $model['menuUrl'] = '';
+                    }
                 }
+            }
 
-                empty($model['menuUrl']) && $model['menuUrl'] = Url::to(['/addons/blank', 'addon' => StringHelper::toUnderScore($model['name'])]);
-                $model['menuUrl'] = urldecode($model['menuUrl']);
+            if (empty($model['menuUrl'])) {
+                unset($models[$k]);
             } else {
-                $authChildMenuByBackend = $model['authChildMenuByBackend'];
-
-                if (isset($authChildMenuByBackend['name'])) {
-                    $url = ['/addons/' . $addon . '/' . $authChildMenuByBackend['name']];
-                    // 查询全部的菜单列表进行匹配显示url
-                    $key = $authChildMenuByBackend['addons_name'] . '|' . $authChildMenuByBackend['name'];
-                    $params = isset($allAddonsMenu[$key]) ? Json::decode($allAddonsMenu[$key]['params']) : [];
-                    $model['menuUrl'] = Url::to(ArrayHelper::merge($url, $params));
-                }
-
-                if (empty($model['menuUrl'])) {
-                    unset($models[$k]);
-                } else {
-                    $model['menuUrl'] = urldecode($model['menuUrl']);
-                }
+                $model['menuUrl'] = urldecode($model['menuUrl']);
             }
         }
 
@@ -155,6 +136,48 @@ class AddonsService extends Service
     }
 
     /**
+     * 更新配置
+     *
+     * @param $name
+     * @param BaseAddonConfig $config
+     * @param $default_config
+     * @return array|Addons|\yii\db\ActiveRecord|null
+     * @throws NotFoundHttpException
+     */
+    public function update($name, $config, $default_config)
+    {
+        if (!($model = $this->findByName($name))) {
+            $model = new Addons();
+        }
+
+        $model->attributes = $config->info;
+        $model->is_setting = $config->isSetting ? StatusEnum::ENABLED : StatusEnum::DISABLED;
+        $model->is_rule = $config->isRule ? StatusEnum::ENABLED : StatusEnum::DISABLED;
+        $model->is_merchant_route_map = $config->isMerchantRouteMap ? StatusEnum::ENABLED : StatusEnum::DISABLED;
+        $model->group = $config->group;
+        $model->bootstrap = $config->bootstrap ?? '';
+        $model->service = $config->service ?? '';
+        $model->default_config = $default_config;
+        $model->console = $config->console ?? [];
+        $model->wechat_message = $config->wechatMessage;
+        $model->updated_at = time();
+        // 首先字母转大写拼音
+        if (($chinese = StringHelper::strToChineseCharacters($model->title)) && !empty($chinese[0])) {
+            $title_initial = mb_substr($chinese[0][0], 0, 1, 'utf-8');
+            $model->title_initial = ucwords((new Pinyin())->abbr($title_initial));
+        }
+
+        if (!$model->save()) {
+            throw new NotFoundHttpException($this->getError($model));
+        }
+
+        // 更新缓存
+        Yii::$app->services->addons->updateCacheByName($name);
+
+        return $model;
+    }
+
+    /**
      * 获取列表
      *
      * @return array|\yii\db\ActiveRecord[]
@@ -185,8 +208,8 @@ class AddonsService extends Service
     public function findByNames(array $names)
     {
         return Addons::find()
-            ->where(['status' => StatusEnum::ENABLED])
             ->select(['id', 'name', 'title'])
+            ->where(['status' => StatusEnum::ENABLED])
             ->andWhere(['in', 'name', $names])
             ->all();
     }
@@ -197,49 +220,58 @@ class AddonsService extends Service
      */
     public function findByNameWithBinding($name, $noCache = false)
     {
-        $cacheKey = CacheKeyEnum::COMMON_ADDONS . $name;
-        if (!($data = Yii::$app->cache->get($cacheKey)) || $noCache == true) {
-            $data = Addons::find()
-                ->where(['name' => $name, 'status' => StatusEnum::ENABLED])
-                ->with(['binding'])
-                ->one();
-
-            Yii::$app->cache->set($cacheKey, $data, 7200);
+        $cacheKey = 'addonsConfig'. ':' . Yii::$app->id . ':' . $name;
+        if (!$noCache && Yii::$app->cache->exists($cacheKey)) {
+            return Yii::$app->cache->get($cacheKey);
         }
+
+        $data = Addons::find()
+            ->where(['name' => $name, 'status' => StatusEnum::ENABLED])
+            ->with([
+                'bindingMenu' => function (ActiveQuery $query) {
+                    return $query->andWhere(['app_id' => Yii::$app->id]);
+                },
+                'bindingCover'
+            ])
+            ->one();
+
+        Yii::$app->cache->set($cacheKey, $data, 7200);
 
         return $data;
     }
 
     /**
-     * @param $name
-     * @param $config
-     * @return array|null|\yii\db\ActiveRecord
-     * @throws NotFoundHttpException
+     * 获取插件名称列表
+     *
+     * @param bool $noCache
+     * @return array|mixed|\yii\db\ActiveRecord[]
      */
-    public function update($name, $config)
+    public function findAllNames($noCache = false)
     {
-        if (!($model = $this->findByName($name))) {
-            $model = new Addons();
+        $cacheKey = CacheEnum::getPrefix('addonsName');
+        if (!$noCache && Yii::$app->cache->exists($cacheKey)) {
+            return Yii::$app->cache->get($cacheKey);
         }
 
-        $model->attributes = $config->info;
-        $model->is_setting = $config->isSetting ? StatusEnum::ENABLED : StatusEnum::DISABLED;
-        $model->is_hook = $config->isHook ? StatusEnum::ENABLED : StatusEnum::DISABLED;
-        $model->is_rule = $config->isRule ? StatusEnum::ENABLED : StatusEnum::DISABLED;
-        $model->group = $config->group;
-        $model->bootstrap = $config->bootstrap ?? '';
-        $model->wechat_message = $config->wechatMessage;
-        $model->updated_at = time();
-        // 首先字母转大写拼音
-        if (($chinese = StringHelper::strToChineseCharacters($model->title)) && !empty($chinese[0])) {
-            $title_initial = mb_substr($chinese[0][0], 0, 1, 'utf-8');
-            $model->title_initial = ucwords((new Pinyin())->abbr($title_initial));
-        }
+        $models = Addons::find()
+            ->select(['name', 'is_merchant_route_map', 'service', 'updated_at'])
+            ->where(['status' => StatusEnum::ENABLED])
+            ->asArray()
+            ->all();
 
-        if (!$model->save()) {
-            throw new NotFoundHttpException($this->getError($model));
-        }
+        Yii::$app->cache->set($cacheKey, $models, 7200);
 
-        return $model;
+        return $models;
+    }
+
+    /**
+     * 触发更新缓存
+     *
+     * @param $name
+     */
+    public function updateCacheByName($name)
+    {
+        $this->findAllNames(true);
+        $this->findByNameWithBinding($name, true);
     }
 }

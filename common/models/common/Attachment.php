@@ -48,7 +48,7 @@ class Attachment extends \common\models\base\BaseModel
     const DRIVE_LOCAL = 'local';
     const DRIVE_QINIU = 'qiniu';
     const DRIVE_OSS = 'oss';
-    const DRIVE_OSS_JS = 'oss-js';
+    const DRIVE_OSS_DIRECT_PASSING = 'oss-direct-passing';
     const DRIVE_COS = 'cos';
 
     /**
@@ -59,6 +59,7 @@ class Attachment extends \common\models\base\BaseModel
         self::DRIVE_QINIU => '七牛',
         self::DRIVE_OSS => 'OSS',
         self::DRIVE_COS => 'COS',
+        // self::DRIVE_OSS_DIRECT_PASSING => 'OSS直传',
     ];
 
     /**
@@ -118,7 +119,10 @@ class Attachment extends \common\models\base\BaseModel
     public function beforeSave($insert)
     {
         if ($this->isNewRecord) {
-            $this->upload_ip = ip2long(Yii::$app->request->userIP);
+            if (!$this->upload_ip) {
+                $this->upload_ip = ip2long(Yii::$app->request->userIP);
+            }
+
             $this->year = date('Y');
             $this->month = date('m');
             $this->day = date('d');

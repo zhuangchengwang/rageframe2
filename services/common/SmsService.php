@@ -59,9 +59,9 @@ class SmsService extends Service
                     'file' => Yii::getAlias('runtime') . '/easy-sms.log',
                 ],
                 'aliyun' => [
-                    'access_key_id' => Yii::$app->debris->config('sms_aliyun_accesskeyid'),
-                    'access_key_secret' => Yii::$app->debris->config('sms_aliyun_accesskeysecret'),
-                    'sign_name' => Yii::$app->debris->config('sms_aliyun_sign_name'),
+                    'access_key_id' => Yii::$app->debris->backendConfig('sms_aliyun_accesskeyid'),
+                    'access_key_secret' => Yii::$app->debris->backendConfig('sms_aliyun_accesskeysecret'),
+                    'sign_name' => Yii::$app->debris->backendConfig('sms_aliyun_sign_name'),
                 ]
             ],
         ];
@@ -71,28 +71,32 @@ class SmsService extends Service
      * 发送短信
      *
      * ```php
-     *       Yii::$app->services->sms->send($mobile, $code, $member_id)
+     *       Yii::$app->services->sms->send($mobile, $code, $usage, $member_id)
      * ```
      *
-     * @param $mobile
-     * @param $code
-     * @param int $member_id
+     * @param int $mobile 手机号码
+     * @param int $code 验证码
+     * @param string $usage 用途
+     * @param int $member_id 用户ID
+     * @return string|null
      * @throws UnprocessableEntityHttpException
      */
     public function send($mobile, $code, $usage, $member_id = 0)
     {
+        $ip = ip2long(Yii::$app->request->userIP);
         if ($this->queueSwitch == true) {
             $messageId = Yii::$app->queue->push(new SmsJob([
                 'mobile' => $mobile,
                 'code' => $code,
                 'usage' => $usage,
                 'member_id' => $member_id,
+                'ip' => $ip
             ]));
 
             return $messageId;
         }
 
-        return $this->realSend($mobile, $code, $usage, $member_id = 0);
+        return $this->realSend($mobile, $code, $usage, $member_id = 0, $ip);
     }
 
     /**
@@ -104,10 +108,10 @@ class SmsService extends Service
      * @param int $member_id
      * @throws UnprocessableEntityHttpException
      */
-    public function realSend($mobile, $code, $usage, $member_id = 0)
+    public function realSend($mobile, $code, $usage, $member_id = 0, $ip = 0)
     {
-        $template = Yii::$app->debris->config('sms_aliyun_template');
-        !empty($template) && $template = ArrayHelper::map(unserialize($template), 'group', 'template');
+        $template = Yii::$app->debris->backendConfig('sms_aliyun_template');
+        !empty($template) && $template = ArrayHelper::map(Json::decode($template), 'group', 'template');
         $templateID = $template[$usage] ?? '';
 
         try {
@@ -129,6 +133,7 @@ class SmsService extends Service
                 'code' => $code,
                 'member_id' => $member_id,
                 'usage' => $usage,
+                'ip' => $ip,
                 'error_code' => 200,
                 'error_msg' => 'ok',
                 'error_data' => Json::encode($result),
@@ -151,18 +156,19 @@ class SmsService extends Service
                 'code' => $code,
                 'member_id' => $member_id,
                 'usage' => $usage,
+                'ip' => $ip,
                 'error_code' => 422,
                 'error_msg' => '发送失败',
                 'error_data' => Json::encode($errorMessage),
             ]);
 
             // 加入提醒池
-            Yii::$app->services->sysNotify->createRemind(
+            Yii::$app->services->backendNotify->createRemind(
                 $log->id,
                 SubscriptionReasonEnum::SMS_CREATE,
                 SubscriptionActionEnum::SMS_ERROR,
                 $log['member_id'],
-                MessageLevelEnum::$listExplain[MessageLevelEnum::ERROR] . "短信：$log->error_data"
+                MessageLevelEnum::getValue(MessageLevelEnum::ERROR) . "短信：$log->error_data"
             );
 
             throw new UnprocessableEntityHttpException('短信发送失败');

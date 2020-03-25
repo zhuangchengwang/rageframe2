@@ -65,6 +65,17 @@ class WechatPay
         $gateway->setCertPath(Yii::getAlias($this->config['cert_client']));
         $gateway->setKeyPath(Yii::getAlias($this->config['cert_key']));
 
+        // EasyWechat 兼容
+        if ($type == self::JS) {
+            Yii::$app->params['wechatPaymentConfig'] = ArrayHelper::merge(Yii::$app->params['wechatPaymentConfig'], [
+                'app_id' => $this->config['app_id'],
+                'mch_id' => $this->config['mch_id'],
+                'key' => $this->config['api_key'],
+                'cert_path' => Yii::getAlias($this->config['cert_client']),
+                'key_path' => Yii::getAlias($this->config['cert_key']),
+            ]);
+        }
+
         return $gateway;
     }
 
@@ -136,13 +147,19 @@ class WechatPay
      * @param bool $debug
      * @return mixed
      */
-    public function js($order, $debug = true)
+    public function js($order, $debug = false)
     {
         $gateway = $this->create(self::JS);
         $request = $gateway->purchase(ArrayHelper::merge($this->order, $order));
         $response = $request->send();
 
-        return $debug ? $response->getData() : $response->getJsOrderData();
+        $data = $response->getJsOrderData();
+        if (isset($data['timeStamp'])) {
+            $data['timestamp'] = $data['timeStamp'];
+            unset($data['timeStamp']);
+        }
+
+        return $debug ? $response->getData() : $data;
     }
 
     /**

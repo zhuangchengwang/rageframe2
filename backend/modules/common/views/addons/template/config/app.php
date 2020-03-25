@@ -1,10 +1,10 @@
 <?php
 
 use common\helpers\StringHelper;
+use common\enums\AppEnum;
 
-$menus = $bindings['menu'] ?? [];
-$appID != \common\enums\AppEnum::BACKEND && $menus = [];
 $menuCount = 0;
+$menus = $bindings['menu'][$appID] ?? [];
 if (isset($menus['title'])) {
     $menuCount = count($menus['title']);
 }
@@ -19,10 +19,25 @@ echo "<?php\n";
 ?>
 
 return [
-    // ----------------------- 权限配置 ----------------------- //
 
-    'authItem' => [
-
+    // ----------------------- 菜单配置 ----------------------- //
+    'config' => [
+        // 菜单配置
+        'menu' => [
+            'location' => 'addons', // default:系统顶部菜单;addons:应用中心菜单
+            'icon' => 'fa fa-puzzle-piece',
+        ],
+        // 子模块配置
+        'modules' => [
+<?php if (in_array($appID, AppEnum::api())) { ?>
+            'v1' => [
+                'class' => 'addons\<?= $model->name; ?>\<?= $appID ?>\modules\v1\Module',
+            ],
+            'v2' => [
+                'class' => 'addons\<?= $model->name; ?>\<?= $appID ?>\modules\v2\Module',
+            ],
+<?php } ?>
+        ],
     ],
 
     // ----------------------- 快捷入口 ----------------------- //
@@ -65,10 +80,24 @@ return [
             <?php } ?>
 
             ],
+            'child' => [
+
+            ],
         ],
     <?php }
 }
 ?>
 
+    ],
+
+    // ----------------------- 权限配置 ----------------------- //
+
+    'authItem' => [
+<?php if (in_array($appID, AppEnum::admin())) { ?>
+        [
+            'title' => '所有权限',
+            'name' => '*',
+        ],
+<?php } ?>
     ],
 ];

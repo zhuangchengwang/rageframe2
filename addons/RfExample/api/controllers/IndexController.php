@@ -1,4 +1,5 @@
 <?php
+
 namespace addons\RfExample\api\controllers;
 
 use yii\rest\Serializer;
@@ -24,7 +25,7 @@ class IndexController extends OnAuthController
      *
      * @var array
      */
-    protected $optional = ['index', 'test'];
+    protected $authOptional = ['index', 'test'];
 
     /**
      * Demo访问地址

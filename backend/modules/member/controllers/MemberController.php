@@ -4,7 +4,7 @@ namespace backend\modules\member\controllers;
 
 use Yii;
 use common\models\base\SearchModel;
-use common\components\Curd;
+use common\traits\MerchantCurd;
 use common\models\member\Member;
 use common\enums\StatusEnum;
 use backend\controllers\BaseController;
@@ -19,7 +19,7 @@ use backend\modules\member\forms\RechargeForm;
  */
 class MemberController extends BaseController
 {
-    use Curd;
+    use MerchantCurd;
 
     /**
      * @var \yii\db\ActiveRecord
@@ -47,9 +47,9 @@ class MemberController extends BaseController
         $dataProvider = $searchModel
             ->search(Yii::$app->request->queryParams);
         $dataProvider->query
-            ->andFilterWhere(['merchant_id' => $this->getMerchantId()])
             ->andWhere(['>=', 'status', StatusEnum::DISABLED])
-            ->with('account');
+            ->andFilterWhere(['merchant_id' => $this->getMerchantId()])
+            ->with(['account', 'level']);
 
         return $this->render($this->action->id, [
             'dataProvider' => $dataProvider,
@@ -69,6 +69,7 @@ class MemberController extends BaseController
     {
         $id = Yii::$app->request->get('id');
         $model = $this->findModel($id);
+        $model->merchant_id = !empty($this->getMerchantId()) ? $this->getMerchantId() : 0;
         $model->scenario = 'backendCreate';
         $modelInfo = clone $model;
 
