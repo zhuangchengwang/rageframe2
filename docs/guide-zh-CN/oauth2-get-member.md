@@ -4,6 +4,8 @@
 
 - 当前用户
 
+> 注意：apache 环境会获取不到 authorization 请自行百度配置好环境
+
 ### 当前用户
 
 请求地址(Get)
@@ -12,11 +14,11 @@
 /oauth2/v1/default
 ```
 
-参数
+Header 参数
 
 参数名 | 参数类型 | 必填 | 默认 | 说明 | 备注
 ---|---|---|---|---|---
-authorization | string| 是 | 无 | Bearer + 空格 + access_token | 注意写入header头
+authorization | string| 是 | 无 | Bearer + 空格 + access_token |
 
 返回
 

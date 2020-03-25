@@ -4,7 +4,7 @@ namespace backend\modules\oauth2\controllers;
 
 use Yii;
 use common\models\base\SearchModel;
-use common\components\Curd;
+use common\traits\Curd;
 use common\models\oauth2\Client;
 use common\enums\StatusEnum;
 use backend\controllers\BaseController;
@@ -46,7 +46,6 @@ class ClientController extends BaseController
         $dataProvider = $searchModel
             ->search(Yii::$app->request->queryParams);
         $dataProvider->query
-            ->andFilterWhere(['merchant_id' => $this->getMerchantId()])
             ->andWhere(['>=', 'status', StatusEnum::DISABLED]);
 
         return $this->render($this->action->id, [

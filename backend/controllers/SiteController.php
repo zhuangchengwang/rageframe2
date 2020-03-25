@@ -33,7 +33,7 @@ class SiteController extends Controller
                 'class' => AccessControl::class,
                 'rules' => [
                     [
-                        'actions' => ['login', 'error','language', 'captcha'],
+                        'actions' => ['login', 'error', 'captcha'],
                         'allow' => true,
                     ],
                     [
@@ -80,20 +80,6 @@ class SiteController extends Controller
     }
 
     /**
-     * 切换语言
-     * @param $language
-     */
-    public function actionLanguage($language) {
-        $session = Yii::$app->session;
-        $session->open();
-        if(isset($language)){
-            Yii::$app->session['language'] = $language;
-        }
-        //切换完语言哪来的返回到哪里，即reload
-        $this->goBack(Yii::$app->request->headers['Referer']);
-}
-
-    /**
      * 登录
      *
      * @return string|\yii\web\Response
@@ -130,9 +116,8 @@ class SiteController extends Controller
      */
     public function actionLogout()
     {
-        $language =Yii::$app->session['language'] ;
         Yii::$app->user->logout();
-        Yii::$app->session['language']=$language?$language:"";
+
         return $this->goHome();
     }
 }

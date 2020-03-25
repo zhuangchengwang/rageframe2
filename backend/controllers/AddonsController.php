@@ -4,21 +4,23 @@ namespace backend\controllers;
 
 use Yii;
 use yii\data\Pagination;
+use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\UnauthorizedHttpException;
+use yii\web\UnprocessableEntityHttpException;
 use common\helpers\Url;
 use common\enums\AppEnum;
 use common\helpers\Auth;
-use common\models\common\Addons;
 use common\helpers\AddonHelper;
-use common\models\wechat\Rule;
 use common\enums\StatusEnum;
 use common\helpers\ArrayHelper;
-use common\helpers\ResultDataHelper;
+use common\helpers\ResultHelper;
 use common\helpers\StringHelper;
-use common\models\wechat\RuleKeyword;
-use backend\modules\wechat\forms\RuleForm;
+use common\behaviors\ActionLogBehavior;
+use addons\Wechat\common\models\Rule;
+use addons\Wechat\common\models\RuleKeyword;
+use addons\Wechat\merchant\forms\RuleForm;
 
 /**
  * Class AddonsController
@@ -46,10 +48,34 @@ class AddonsController extends Controller
      */
     public $addonName;
 
+    /**
+     * @return array
+     */
+    public function behaviors()
+    {
+        return [
+            'access' => [
+                'class' => AccessControl::class,
+                'rules' => [
+                    [
+                        'allow' => true,
+                        'roles' => ['@'], // 登录
+                    ],
+                ],
+            ],
+            'actionLog' => [
+                'class' => ActionLogBehavior::class
+            ]
+        ];
+    }
+
+    /**
+     * @throws \yii\base\InvalidConfigException
+     */
     public function init()
     {
         parent::init();
-        $this->addonName = Yii::$app->request->get('addon', Yii::$app->request->post('addon', ''));
+        $this->addonName = Yii::$app->params['addon']['name'];
         $this->addonName = StringHelper::strUcwords($this->addonName);
 
         Yii::$app->params['inAddon'] = true;
@@ -57,26 +83,27 @@ class AddonsController extends Controller
 
     /**
      * @param $action
-     * @return bool|\yii\web\Response
+     * @return bool
      * @throws NotFoundHttpException
      * @throws UnauthorizedHttpException
+     * @throws \yii\base\InvalidConfigException
+     * @throws \yii\di\NotInstantiableException
      * @throws \yii\web\BadRequestHttpException
      */
     public function beforeAction($action)
     {
-        if (Yii::$app->user->isGuest) {
-            throw new UnauthorizedHttpException('未登录');
-        }
-
         // 验证是否超级管理员或空权限
         if ($action->id == 'blank') {
             throw new NotFoundHttpException('找不到可用菜单，请检查自己的配置或者联系管理员');
         }
 
+        if ($action->id != 'cover') {
+            // 动态注入服务
+            AddonHelper::service('Wechat');
+        }
+
         // 权限校验
-        $route = '';
-        in_array($action->id, ['cover']) && $route = Addons::AUTH_COVER;
-        in_array($action->id, ['rule', 'rule-edit', 'rule-delete', 'ajax-update']) && $route = Addons::AUTH_RULE;
+        $route = '/' . Yii::$app->params['addonName'] . '/addons/' . $action->id;
         if (false === Auth::verify($route)) {
             throw new UnauthorizedHttpException('对不起，您现在还没获此操作的权限');
         }
@@ -93,14 +120,11 @@ class AddonsController extends Controller
      */
     public function actionCover()
     {
-        // 初始化模块
-        AddonHelper::initAddon($this->addonName, $this->route);
-
         $covers = [];
         $baseCover = Yii::$app->params['addonBinding']['cover'];
 
         foreach ($baseCover as $value) {
-            $key = AppEnum::$listExplain[$value['app_id']] . '入口';
+            $key = AppEnum::getValue($value['app_id']) . '入口';
             $value['url'] = '';
 
             !is_array($value['params']) && $value['params'] = [];
@@ -112,8 +136,8 @@ class AddonsController extends Controller
                 case AppEnum::FRONTEND :
                     $value['url'] = Url::toFront($route);
                     break;
-                case AppEnum::WECHAT :
-                    $value['url'] = Url::toWechat($route);
+                case AppEnum::HTML5 :
+                    $value['url'] = Url::toHtml5($route);
                     break;
                 case AppEnum::OAUTH2 :
                     $value['url'] = Url::toOAuth2($route);
@@ -135,13 +159,11 @@ class AddonsController extends Controller
      * 规则
      *
      * @return string
-     * @throws \yii\web\NotFoundHttpException
+     * @throws NotFoundHttpException
+     * @throws UnprocessableEntityHttpException
      */
     public function actionRule()
     {
-        // 初始化模块
-        AddonHelper::initAddon($this->addonName, $this->route);
-
         $keyword = Yii::$app->request->get('keyword', null);
         $data = Rule::find()
             ->where(['>=', 'status', StatusEnum::DISABLED])
@@ -169,19 +191,17 @@ class AddonsController extends Controller
      *
      * @return string|\yii\web\Response
      * @throws NotFoundHttpException
+     * @throws UnprocessableEntityHttpException
      * @throws \yii\base\ExitException
      */
     public function actionRuleEdit()
     {
-        // 初始化模块
-        AddonHelper::initAddon($this->addonName, $this->route);
-
         $request = Yii::$app->request;
         $id = $request->get('id');
         $model = $this->findModel($id);
         $model->module = Rule::RULE_MODULE_ADDON;
         $model->data = $this->addonName;
-        $defaultRuleKeywords = Yii::$app->services->wechatRuleKeyword->getType($model->ruleKeyword);
+        $defaultRuleKeywords = Yii::$app->wechatService->ruleKeyword->getType($model->ruleKeyword);
 
         // ajax校验
         if (Yii::$app->request->isAjax && !Yii::$app->request->isPjax) {
@@ -205,14 +225,14 @@ class AddonsController extends Controller
                 $ruleKey = $postData['ruleKey'] ?? [];
                 $ruleKey[RuleKeyword::TYPE_MATCH] = explode(',', $model->keyword);
                 // 更新关键字
-                Yii::$app->services->wechatRuleKeyword->update($model, $ruleKey, $defaultRuleKeywords);
+                Yii::$app->wechatService->ruleKeyword->update($model, $ruleKey, $defaultRuleKeywords);
                 $transaction->commit();
 
-                return $this->redirect(['/addons/rule', 'addon' => $this->addonName]);
+                return $this->redirect(['rule', 'addon' => $this->addonName]);
             } catch (\Exception $e) {
                 $transaction->rollBack();
                 Yii::$app->getSession()->setFlash('error', $e->getMessage());
-                return $this->redirect(['/addons/rule', 'addon' => $this->addonName]);
+                return $this->redirect(['rule', 'addon' => $this->addonName]);
             }
         }
 
@@ -234,11 +254,11 @@ class AddonsController extends Controller
     {
         $model = $this->findModel($id);
         if ($model->delete()) {
-            return $this->redirect(['/addons/rule', 'addon' => $this->addonName]);
+            return $this->redirect(['rule', 'addon' => $this->addonName]);
         }
 
         Yii::$app->getSession()->setFlash('error', '删除失败');
-        return $this->redirect(['/addons/rule', 'addon' => $this->addonName]);
+        return $this->redirect(['rule', 'addon' => $this->addonName]);
     }
 
     /**
@@ -250,15 +270,15 @@ class AddonsController extends Controller
     public function actionAjaxUpdate($id)
     {
         if (!($model = Rule::find()->where(['id' => $id])->andWhere(['merchant_id' => Yii::$app->services->merchant->getId()])->one())) {
-            return ResultDataHelper::json(404, '找不到数据');
+            return ResultHelper::json(404, '找不到数据');
         }
 
         $model->attributes = ArrayHelper::filter(Yii::$app->request->get(), ['sort', 'status']);
         if (!$model->save()) {
-            return ResultDataHelper::json(422, Yii::$app->debris->analyErr($model->getFirstErrors()));
+            return ResultHelper::json(422, Yii::$app->debris->analyErr($model->getFirstErrors()));
         }
 
-        return ResultDataHelper::json(200, '修改成功');
+        return ResultHelper::json(200, '修改成功');
     }
 
     /**

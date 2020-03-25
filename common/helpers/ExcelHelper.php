@@ -4,6 +4,7 @@ namespace common\helpers;
 
 use Exception;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Html;
 use PhpOffice\PhpSpreadsheet\Writer\Xls;
@@ -45,6 +46,8 @@ class ExcelHelper
         $hk = 1;
         foreach ($header as $k => $v) {
             $sheet->setCellValue(Coordinate::stringFromColumnIndex($hk) . '1', $v[0]);
+            $sheet->getStyle(Coordinate::stringFromColumnIndex($hk) . '1')->getFont()->setBold(true);
+            $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($hk))->setAutoSize(true);
             $hk += 1;
         }
 
@@ -61,7 +64,8 @@ class ExcelHelper
                     // 解析字段
                     $realData = self::formatting($header[$key], trim(self::formattingField($row, $value[1])), $row);
                     // 写入excel
-                    $sheet->setCellValue(Coordinate::stringFromColumnIndex($span) . $column, $realData);
+                    $sheet->setCellValueExplicit(Coordinate::stringFromColumnIndex($span) . $column, $realData, DataType::TYPE_STRING);
+                    // $sheet->setCellValue(Coordinate::stringFromColumnIndex($span) . $column, $realData);
                     $span++;
                 }
 
@@ -111,7 +115,7 @@ class ExcelHelper
         unset($spreadsheet);
         ob_end_flush();
 
-        return true;
+        exit();
     }
 
     /**
@@ -154,7 +158,7 @@ class ExcelHelper
                     foreach ($header as $key => $value) {
                         // 解析字段
                         $realData = self::formatting($header[$key], trim(self::formattingField($row, $value[1])), $row);
-                        $data[] = str_replace(PHP_EOL, '', $realData);
+                        $data[] = '"' . $realData . '"';
                     }
 
                     $info[] = implode("\t ,", $data) . "\t ,";

@@ -302,8 +302,9 @@ class StringHelper extends BaseStringHelper
         }
 
         $max = strlen($seed) - 1;
+        $seed = str_split($seed);
         for ($i = 0; $i < $length; $i++) {
-            $hash .= $seed{mt_rand(0, $max)};
+            $hash .= $seed[mt_rand(0, $max)];
         }
 
         return $hash;
@@ -320,6 +321,20 @@ class StringHelper extends BaseStringHelper
     {
         $str = $prefix ?? '';
         return $str . substr(implode(null, array_map('ord', str_split(substr(uniqid(), 7, 13), 1))), 0, $length);
+    }
+
+    /**
+     * 生成随机code
+     *
+     * @param $merchant_id
+     * @return false|string
+     */
+    public static function code($merchant_id)
+    {
+        $time_str = date('YmdHis');
+        $rand_code = rand(0, 999999);
+
+        return substr(md5($time_str . $rand_code . $merchant_id), 16, 32);
     }
 
     /**

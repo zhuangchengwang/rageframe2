@@ -6,9 +6,9 @@ use common\enums\StatusEnum;
 ?>
 
 <div class="form-group">
-    <?= Html::label(t($row['title']), $row['name'], ['class' => 'control-label demo']); ?>
+    <?= Html::label($row['title'], $row['name'], ['class' => 'control-label demo']); ?>
     <?php if ($row['is_hide_remark'] != StatusEnum::ENABLED) { ?>
-        (<?= t($row['remark']) ?>)
+        <small><?= \yii\helpers\HtmlPurifier::process($row['remark']) ?></small>
     <?php } ?>
     <div class="col-sm-push-10">
         <?= kartik\date\DatePicker::widget([

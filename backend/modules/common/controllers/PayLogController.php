@@ -26,15 +26,14 @@ class PayLogController extends BaseController
             'scenario' => 'default',
             'partialMatchAttributes' => ['order_sn'], // 模糊查询
             'defaultOrder' => [
-                'id' => SORT_DESC
+                'id' => SORT_DESC,
             ],
-            'pageSize' => $this->pageSize
+            'pageSize' => $this->pageSize,
         ]);
 
         $dataProvider = $searchModel
             ->search(Yii::$app->request->queryParams);
         $dataProvider->query
-            ->andFilterWhere(['merchant_id' => $this->getMerchantId()])
             ->andWhere(['>=', 'status', StatusEnum::DISABLED]);
 
         return $this->render($this->action->id, [
@@ -51,12 +50,8 @@ class PayLogController extends BaseController
      */
     public function actionView($id)
     {
-        $model = PayLog::find()
-            ->where(['id' => $id])
-            ->one();
-
         return $this->renderAjax($this->action->id, [
-            'model' => $model,
+            'model' => PayLog::findOne($id),
         ]);
     }
 }

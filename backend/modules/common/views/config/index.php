@@ -1,10 +1,11 @@
 <?php
 
+use common\enums\ConfigTypeEnum;
 use common\helpers\Url;
 use common\helpers\Html;
 use yii\grid\GridView;
 
-$this->title = t('配置管理');
+$this->title = '配置管理';
 $this->params['breadcrumbs'][] = ['label' => $this->title];
 ?>
 
@@ -12,10 +13,10 @@ $this->params['breadcrumbs'][] = ['label' => $this->title];
     <div class="col-sm-12">
         <div class="nav-tabs-custom">
             <ul class="nav nav-tabs">
-                <li class="active"><a href="<?= Url::to(['config/index']) ?>"><?=t('配置管理')?></a></li>
-                <li><a href="<?= Url::to(['config-cate/index']) ?>"> <?=t('配置分类')?></a></li>
+                <li class="active"><a href="<?= Url::to(['config/index']) ?>"> 配置管理</a></li>
+                <li><a href="<?= Url::to(['config-cate/index']) ?>"> 配置分类</a></li>
                 <li class="pull-right">
-                    <?= Html::create(['ajax-edit'],t('创建'), [
+                    <?= Html::create(['ajax-edit'], '创建', [
                         'data-toggle' => 'modal',
                         'data-target' => '#ajaxModal',
                     ]) ?>
@@ -44,35 +45,35 @@ $this->params['breadcrumbs'][] = ['label' => $this->title];
                                 'headerOptions' => ['class' => 'col-md-1'],
                             ],
                             [
-                                'label' => t('类别'),
+                                'label' => '类别',
                                 'attribute' => 'cate.title',
                                 'filter' => Html::activeDropDownList($searchModel, 'cate_id', $cateDropDownList, [
-                                        'prompt' =>t( '全部'),
+                                        'prompt' => '全部',
                                         'class' => 'form-control'
                                     ]
                                 ),
                             ],
                             [
-                                'label' => t('属性'),
+                                'label' => '属性',
                                 'attribute' => 'type',
                                 'value' => function ($model, $key, $index, $column) {
-                                    return Yii::$app->params['configTypeList'][$model->type];
+                                    return ConfigTypeEnum::getValue($model->type);
                                 },
                                 'filter' => Html::activeDropDownList($searchModel, 'type',
-                                    Yii::$app->params['configTypeList'], [
-                                        'prompt' =>t( '全部'),
+                                    ConfigTypeEnum::getMap(), [
+                                        'prompt' => '全部',
                                         'class' => 'form-control'
                                     ]
                                 ),
                                 'headerOptions' => ['class' => 'col-md-1'],
                             ],
                             [
-                                'header' => t("操作"),
+                                'header' => "操作",
                                 'class' => 'yii\grid\ActionColumn',
                                 'template' => '{edit} {status} {destroy}',
                                 'buttons' => [
                                     'edit' => function ($url, $model, $key) {
-                                        return Html::edit(['ajax-edit', 'id' => $model->id], t('编辑'), [
+                                        return Html::edit(['ajax-edit', 'id' => $model->id], '编辑', [
                                             'data-toggle' => 'modal',
                                             'data-target' => '#ajaxModal',
                                         ]);

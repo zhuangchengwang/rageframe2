@@ -9,6 +9,7 @@ use yii\behaviors\TimestampBehavior;
 use common\enums\StatusEnum;
 use common\models\base\User;
 use common\helpers\RegularHelper;
+use common\traits\Tree;
 
 /**
  * This is the model class for table "{{%member}}".
@@ -23,6 +24,7 @@ use common\helpers\RegularHelper;
  * @property string $nickname 昵称
  * @property string $realname 真实姓名
  * @property string $head_portrait 头像
+ * @property int $current_level 当前级别
  * @property int $gender 性别[0:未知;1:男;2:女]
  * @property string $qq qq
  * @property string $email 邮箱
@@ -37,12 +39,16 @@ use common\helpers\RegularHelper;
  * @property int $city_id 城市
  * @property int $area_id 地区
  * @property string $pid 上级id
+ * @property string $tree 树
+ * @property string $level 级别
  * @property int $status 状态[-1:删除;0:禁用;1启用]
  * @property string $created_at 创建时间
  * @property string $updated_at 修改时间
  */
 class Member extends User
 {
+    use Tree;
+
     /**
      * {@inheritdoc}
      */
@@ -60,13 +66,14 @@ class Member extends User
             [['username', 'password_hash'], 'required', 'on' => ['backendCreate']],
             [['password_hash'], 'string', 'min' => 6, 'on' => ['backendCreate']],
             [['username'], 'unique', 'on' => ['backendCreate']],
-            [['merchant_id', 'type', 'gender','visit_count', 'role', 'last_time', 'province_id', 'city_id', 'area_id', 'pid', 'status', 'created_at', 'updated_at'], 'integer'],
+            [['id', 'current_level', 'level', 'merchant_id', 'type', 'gender','visit_count', 'role', 'last_time', 'province_id', 'city_id', 'area_id', 'pid', 'status', 'created_at', 'updated_at'], 'integer'],
             [['birthday'], 'safe'],
             [['username', 'qq', 'home_phone', 'mobile'], 'string', 'max' => 20],
             [['password_hash', 'password_reset_token', 'head_portrait'], 'string', 'max' => 150],
             [['auth_key'], 'string', 'max' => 32],
             [['nickname', 'realname'], 'string', 'max' => 50],
             [['email'], 'string', 'max' => 60],
+            [['tree'], 'string', 'max' => 2000],
             [['last_ip'], 'string', 'max' => 16],
             ['mobile', 'match', 'pattern' => RegularHelper::mobile(),'message' => '不是一个有效的手机号码'],
         ];
@@ -88,6 +95,7 @@ class Member extends User
             'nickname' => '昵称',
             'realname' => '真实姓名',
             'head_portrait' => '头像',
+            'current_level' => '当前级别',
             'gender' => '性别',
             'qq' => 'QQ',
             'email' => '邮箱',
@@ -102,6 +110,8 @@ class Member extends User
             'city_id' => 'City ID',
             'area_id' => 'Area ID',
             'pid' => '上级id',
+            'level' => '级别',
+            'tree' => '树',
             'status' => '状态',
             'created_at' => '创建时间',
             'updated_at' => '修改时间',
@@ -115,10 +125,10 @@ class Member extends User
      */
     public function scenarios()
     {
-        return [
-            'backendCreate' => ['username', 'password_hash'],
-            'default' => array_keys($this->attributeLabels()),
-        ];
+        $scenarios = parent::scenarios();
+        $scenarios['backendCreate'] = ['username', 'password_hash'];
+
+        return $scenarios;
     }
 
     /**
@@ -127,6 +137,14 @@ class Member extends User
     public function getAccount()
     {
         return $this->hasOne(Account::class, ['member_id' => 'id']);
+    }
+
+    /**
+     * 关联级别
+     */
+    public function getLevel()
+    {
+        return $this->hasOne(Level::class, ['level' => 'current_level'])->where(['merchant_id' => Yii::$app->services->merchant->getId()]);
     }
 
     /**
@@ -150,6 +168,9 @@ class Member extends User
             $this->auth_key = Yii::$app->security->generateRandomString();
         }
 
+        // 处理上下级关系
+        $this->autoUpdateTree();
+
         return parent::beforeSave($insert);
     }
 
@@ -162,7 +183,12 @@ class Member extends User
         if ($insert) {
             $account = new Account();
             $account->member_id = $this->id;
+            $account->merchant_id = $this->merchant_id;
             $account->save();
+        }
+
+        if ($this->status == StatusEnum::DELETE) {
+            Account::updateAll(['status' => StatusEnum::DELETE], ['member_id' => $this->id]);
         }
 
         parent::afterSave($insert, $changedAttributes);
@@ -173,6 +199,8 @@ class Member extends User
      */
     public function behaviors()
     {
+        $merchant_id = Yii::$app->services->merchant->getId();
+
         return [
             [
                 'class' => TimestampBehavior::class,
@@ -186,7 +214,7 @@ class Member extends User
                 'attributes' => [
                     ActiveRecord::EVENT_BEFORE_INSERT => ['merchant_id'],
                 ],
-                'value' => Yii::$app->services->merchant->getId(),
+                'value' => !empty($merchant_id) ? $merchant_id : 0,
             ]
         ];
     }

@@ -7,8 +7,9 @@ use yii\imagine\Image;
 use yii\web\UploadedFile;
 use yii\web\NotFoundHttpException;
 use yii\helpers\Json;
+use common\enums\StatusEnum;
 use common\models\common\Attachment;
-use common\components\UploadDrive;
+use common\components\uploaddrive\DriveInterface;
 
 /**
  * 上传辅助类
@@ -69,6 +70,7 @@ class UploadHelper
         'height',
         'md5',
         'poster',
+        'writeTable',
     ];
 
     /**
@@ -96,7 +98,7 @@ class UploadHelper
     protected $isCut = false;
 
     /**
-     * @var UploadDrive
+     * @var DriveInterface
      */
     protected $uploadDrive;
 
@@ -126,8 +128,11 @@ class UploadHelper
             $this->isCut = true;
         }
 
-        $this->uploadDrive = new UploadDrive($this->drive, $superaddition);
-        $this->filesystem = $this->uploadDrive->getEntity();
+        $drive = $this->drive;
+        $this->uploadDrive = Yii::$app->uploadDrive->$drive([
+            'superaddition' => $superaddition
+        ]);
+        $this->filesystem = $this->uploadDrive->entity();
     }
 
     /**
@@ -216,6 +221,7 @@ class UploadHelper
         // $name = $m ? $m[1] : "",
         $this->baseInfo['extension'] = $extend;
         $this->baseInfo['size'] = strlen($img);
+        $this->config['md5'] = md5($img);
         $this->baseInfo['url'] = $this->paths['relativePath'] . $this->baseInfo['name'] . '.' . $extend;
 
         $this->verify();
@@ -284,7 +290,8 @@ class UploadHelper
 
         // 判断如果文件存在就重命名文件名
         if ($this->filesystem->has($this->baseInfo['url'])) {
-            $this->baseInfo['name'] = $this->baseInfo['name'] . '_' . StringHelper::randomNum();
+            $name = explode('_', $this->baseInfo['name']);
+            $this->baseInfo['name'] = $name[0] . '_' . time() . '_' . StringHelper::random(8);
             $this->baseInfo['url'] = $this->paths['relativePath'] . $this->baseInfo['name'] . '.' . $this->baseInfo['extension'];
         }
 
@@ -386,15 +393,15 @@ class UploadHelper
      */
     protected function watermark()
     {
-        if (Yii::$app->debris->config('sys_image_watermark_status') != true) {
+        if (Yii::$app->debris->backendConfig('sys_image_watermark_status') != true) {
             return true;
         }
 
         // 原图路径
         $absolutePath = Yii::getAlias("@attachment/") . $this->baseInfo['url'];
 
-        $local = Yii::$app->debris->config('sys_image_watermark_location');
-        $watermarkImg = StringHelper::getLocalFilePath(Yii::$app->debris->config('sys_image_watermark_img'));
+        $local = Yii::$app->debris->backendConfig('sys_image_watermark_location');
+        $watermarkImg = StringHelper::getLocalFilePath(Yii::$app->debris->backendConfig('sys_image_watermark_img'));
 
         if ($coordinate = DebrisHelper::getWatermarkLocation($absolutePath, $watermarkImg, $local)) {
             // $aliasName = StringHelper::getAliasUrl($fullPathName, 'watermark');
@@ -550,7 +557,7 @@ class UploadHelper
 
         $config = $this->config;
         // 保留原名称
-        $config['originalName'] == false && $this->baseInfo['name'] = $config['prefix'] . StringHelper::randomNum(time());
+        $config['originalName'] == false && $this->baseInfo['name'] = $config['prefix']  . time()  . '_' . StringHelper::random(8);
 
         // 文件路径
         $filePath = $config['path'] . date($config['subName'], time()) . "/";
@@ -640,10 +647,9 @@ class UploadHelper
         $this->baseInfo['size'] = $this->filesystem->getSize($this->baseInfo['url']);
         $path = $this->baseInfo['url'];
         // 获取上传路径
-        $this->baseInfo = $this->uploadDrive->getUrl($this->baseInfo, $this->config['fullPath']);
+        $this->baseInfo = $this->uploadDrive->getUrl($this->baseInfo, $this->drive, $this->config['fullPath']);
 
-        // 写入数据库
-        $attachment_id = Yii::$app->services->attachment->create([
+        $data = [
             'drive' => $this->drive,
             'upload_type' => $this->type,
             'specific_type' => $this->baseInfo['type'],
@@ -655,9 +661,17 @@ class UploadHelper
             'md5' => $this->config['md5'] ?? '',
             'base_url' => $this->baseInfo['url'],
             'path' => $path
-        ]);
+        ];
 
-        $this->baseInfo['id'] = $attachment_id;
+        // 写入数据库
+        if (!isset($this->config['writeTable'])) {
+            $attachment_id = Yii::$app->services->attachment->create($data);
+            $this->baseInfo['id'] = $attachment_id;
+        } elseif (isset($this->config['writeTable']) && $this->config['writeTable'] == StatusEnum::ENABLED) {
+            $attachment_id = Yii::$app->services->attachment->create($data);
+            $this->baseInfo['id'] = $attachment_id;
+        }
+
         $this->baseInfo['formatter_size'] = Yii::$app->formatter->asShortSize($this->baseInfo['size'], 2);
         $this->baseInfo['upload_type'] = self::formattingFileType($this->baseInfo['type'], $this->baseInfo['extension'], $this->type);
 

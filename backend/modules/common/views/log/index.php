@@ -3,7 +3,6 @@
 use yii\grid\GridView;
 use common\enums\AppEnum;
 use common\helpers\Html;
-use common\helpers\Url;
 use common\helpers\DebrisHelper;
 
 $this->title = '全局日志';
@@ -16,10 +15,14 @@ $this->params['breadcrumbs'][] = ['label' => $this->title, 'url' => ['index']];
             <div class="box-header">
                 <h3 class="box-title"><?= $this->title; ?></h3>
                 <div class="box-tools">
+                    <?= Html::linkButton(['flow-stat'], '<i class="fa fa-bar-chart"></i> 流量报表统计', [
+                        'data-toggle' => 'modal',
+                        'data-target' => '#ajaxModalMax',
+                    ]) ?>
                     <?= Html::linkButton(['stat'], '<i class="fa fa-area-chart"></i> 异常请求报表统计', [
                         'data-toggle' => 'modal',
                         'data-target' => '#ajaxModalMax',
-                    ])?>
+                    ]) ?>
                 </div>
             </div>
             <div class="box-body table-responsive">
@@ -36,35 +39,33 @@ $this->params['breadcrumbs'][] = ['label' => $this->title, 'url' => ['index']];
                         ],
                         [
                             'attribute' => 'app_id',
+                            'filter' => Html::activeDropDownList($searchModel, 'app_id', AppEnum::getMap(), [
+                                'prompt' => '全部',
+                                'class' => 'form-control'
+                            ]),
+                            'value' => function ($model) {
+                                return AppEnum::getValue($model->app_id);
+                            },
                             'headerOptions' => ['class' => 'col-md-1'],
                         ],
                         [
                             'label' => '用户',
                             'value' => function ($model) {
-                                if (empty($model->user_id)) {
-                                    return '游客';
-                                } elseif (AppEnum::BACKEND == $model->app_id){
-                                    return $model->manager->username;
-                                } elseif (in_array($model->app_id, [AppEnum::API, AppEnum::FRONTEND, AppEnum::WECHAT])){
-                                    return $model->member->username;
-                                }
+                                return Yii::$app->services->backend->getUserName($model);
                             },
                             'filter' => false, //不显示搜索框
+                            'format' => 'raw',
                         ],
                         'url',
                         [
-                            'label' => 'ip',
-                            'attribute' => 'ip',
+                            'label' => '位置信息',
                             'value' => function ($model) {
-                                return DebrisHelper::long2ip($model->ip);
+                                $str = [];
+                                $str[] = DebrisHelper::analysisIp($model->ip);
+                                $str[] = DebrisHelper::long2ip($model->ip);
+                                return implode("</br>", $str);
                             },
-                            'filter' => false, //不显示搜索框
-                        ],
-                        [
-                            'label' => '地区',
-                            'value' => function ($model) {
-                                return DebrisHelper::analysisIp($model->ip);
-                            },
+                            'format' => 'raw',
                         ],
                         [
                             'attribute' => 'error_code',

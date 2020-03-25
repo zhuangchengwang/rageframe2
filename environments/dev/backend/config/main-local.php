@@ -22,16 +22,16 @@ if (!YII_ENV_TEST) {
 //        'allowedIPs' => ['127.0.0.1', '::1','140.224.*.*'],
         'generators' => [
             'crud' => [
-                'class' => \backend\components\gii\crud\Generator::class,
+                'class' => \common\components\gii\crud\Generator::class,
                 'templates' => [
-                    'rageframe' => '@backend/components/gii/crud/default',
+                    'rageframe' => '@common/components/gii/crud/default',
                     'default' => '@vendor/yiisoft/yii2-gii/src/generators/crud/default',
                 ]
             ],
             'model' => [
                 'class' => \yii\gii\generators\model\Generator::class,
                 'templates' => [
-                    'rageframe' => '@backend/components/gii/model/default',
+                    'rageframe' => '@common/components/gii/model/default',
                     'default' => '@vendor/yiisoft/yii2-gii/src/generators/model/default',
                 ]
             ],

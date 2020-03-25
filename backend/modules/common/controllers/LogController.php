@@ -3,7 +3,7 @@
 namespace backend\modules\common\controllers;
 
 use Yii;
-use common\helpers\ResultDataHelper;
+use common\helpers\ResultHelper;
 use common\models\common\Log;
 use common\enums\StatusEnum;
 use common\models\base\SearchModel;
@@ -27,15 +27,14 @@ class LogController extends BaseController
             'scenario' => 'default',
             'partialMatchAttributes' => ['method', 'url'], // 模糊查询
             'defaultOrder' => [
-                'id' => SORT_DESC
+                'id' => SORT_DESC,
             ],
-            'pageSize' => $this->pageSize
+            'pageSize' => $this->pageSize,
         ]);
 
         $dataProvider = $searchModel
             ->search(Yii::$app->request->queryParams);
         $dataProvider->query
-            ->andFilterWhere(['merchant_id' => $this->getMerchantId()])
             ->andWhere(['>=', 'status', StatusEnum::DISABLED]);
 
         return $this->render($this->action->id, [
@@ -52,7 +51,25 @@ class LogController extends BaseController
     {
         if (!empty($type)) {
             $data = Yii::$app->services->log->stat($type);
-            return ResultDataHelper::json(200, '获取成功', $data);
+
+            return ResultHelper::json(200, '获取成功', $data);
+        }
+
+        return $this->renderAjax($this->action->id, [
+
+        ]);
+    }
+
+    /**
+     * @param string $data
+     * @return array|string
+     */
+    public function actionFlowStat($type = '')
+    {
+        if (!empty($type)) {
+            $data = Yii::$app->services->log->flowStat($type);
+
+            return ResultHelper::json(200, '获取成功', $data);
         }
 
         return $this->renderAjax($this->action->id, [
@@ -68,12 +85,8 @@ class LogController extends BaseController
      */
     public function actionView($id)
     {
-        $model = Log::find()
-            ->where(['id' => $id])
-            ->one();
-
         return $this->renderAjax($this->action->id, [
-            'model' => $model,
+            'model' => Log::findOne($id),
         ]);
     }
 }

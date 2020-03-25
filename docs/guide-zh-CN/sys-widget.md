@@ -12,12 +12,13 @@
 - 文件上传控件
 - 多文件上传控件
 - 图片裁剪上传
-- 多Input框控件
+- 多 Input 框控件
 - 地图经纬度选择
 - Select2
 - 省市区控件
 - 省市区控件(复选框)
 - 百度编辑器
+- Markdown 编辑器
 - TreeGrid
 
 ### 颜色选择器
@@ -109,6 +110,7 @@ HTML;
 
 ### 图片上传控件
 
+> 配置部分在 `common\config\params.php` 文件，可用自行在里面切换全局上传配置  
 > 注意OSS/七牛暂不支持切片和缩略图操作，以下是完整案例
 
 ```
@@ -133,11 +135,10 @@ HTML;
                  ],
                  'drive' => 'local',// 默认本地 支持 qiniu/oss/cos 上传
              ],
+             'chunked' => false,// 开启分片上传
+             'chunkSize' => 512 * 1024,// 分片大小
+             'independentUrl' => false, // 独立上传地址, 如果设置了true则不受全局上传地址控制 
          ],
-         'chunked' => false,// 开启分片上传
-         'chunkSize' => 512 * 1024,// 分片大小
-         'independentUrl' => false, // 独立上传地址, 如果设置了true则不受全局上传地址控制 
-        ]
 ]);?>
 ```
 获取缩略图路径查看 [字符串辅助类](helper-string.md) 的 `获取缩略图地址`  
@@ -145,6 +146,7 @@ config 更多参考 http://fex.baidu.com/webuploader/doc/
 
 ### 多图上传控件
 
+> 配置部分在 `common\config\params.php` 文件，可用自行在里面切换全局上传配置  
 > 注意传入的value值为数组,例如: array('img1.jpg', 'img2.jpg')
 
 ```
@@ -171,6 +173,7 @@ config 更多参考 http://fex.baidu.com/webuploader/doc/
 
 ### 文件上传控件
 
+> 配置部分在 `common\config\params.php` 文件，可用自行在里面切换全局上传配置  
 > 注意文件上传不支持缩略图配置
 
 ```
@@ -187,6 +190,7 @@ config 更多参考 http://fex.baidu.com/webuploader/doc/
 
 ### 多文件上传控件
 
+> 配置部分在 `common\config\params.php` 文件，可用自行在里面切换全局上传配置  
 > 注意多文件上传不支持缩略图配置  
 > 注意传入的value值为数组,例如: array('img1.jpg', 'img2.jpg')
 
@@ -205,7 +209,7 @@ config 更多参考 http://fex.baidu.com/webuploader/doc/
 ### 图片裁剪上传
 
 ```
-<?= $form->field($model, 'head_portrait')->widget(\backend\widgets\cropper\Cropper::class, [
+<?= $form->field($model, 'head_portrait')->widget(\common\widgets\cropper\Cropper::class, [
         'config' => [
               // 可设置自己的上传地址, 不设置则默认地址
               // 'server' => '',
@@ -268,7 +272,7 @@ config 更多参考 http://fex.baidu.com/webuploader/doc/
 
 ```
 // 注意提前申请好对应地图的key
-<?= $form->field($model, 'address')->widget(\backend\widgets\selectmap\Map::class, [
+<?= $form->field($model, 'address')->widget(\common\widgets\selectmap\Map::class, [
     'type' => 'amap', // amap高德;tencent:腾讯;baidu:百度
 ]); ?>
 ```
@@ -293,7 +297,7 @@ config 更多参考 http://fex.baidu.com/webuploader/doc/
 ### 省市区控件
 
 ```
-<?= \backend\widgets\provinces\Provinces::widget([
+<?= \common\widgets\provinces\Provinces::widget([
     'form' => $form,
     'model' => $model,
     'provincesName' => 'province_id',// 省字段名
@@ -322,7 +326,7 @@ config 更多参考 http://fex.baidu.com/webuploader/doc/
 调用
 
 ```
-<?= \backend\widgets\area\Area::widget([
+<?= \common\widgets\area\Area::widget([
     'form' => $form,
     'model' => $model,
     'provincesName' => 'province_ids',// 省字段名
@@ -361,6 +365,23 @@ config 更多参考 http://fex.baidu.com/webuploader/doc/
 ```
 
 更多文档：http://fex.baidu.com/ueditor/#start-start
+
+### Markdown 编辑器
+
+
+```
+<?= $form->field($model, 'content')->widget(\common\widgets\markdown\Markdown::class, [
+        // 'server' => '', // 图片上传路径 + 驱动
+]); ?>
+```
+
+解析
+
+```
+<?= \common\helpers\MarkdownHelper::toHtml($content); ?>
+```
+
+更多文档：https://pandao.github.io/editor.md/examples/index.html
 
 ### TreeGrid
 

@@ -3,7 +3,7 @@
 namespace backend\modules\common\controllers;
 
 use Yii;
-use common\components\Curd;
+use common\traits\Curd;
 use common\models\base\SearchModel;
 use common\models\common\Attachment;
 use common\enums\StatusEnum;
@@ -36,15 +36,14 @@ class AttachmentController extends BaseController
             'scenario' => 'default',
             'partialMatchAttributes' => ['title'], // 模糊查询
             'defaultOrder' => [
-                'id' => SORT_DESC
+                'id' => SORT_DESC,
             ],
-            'pageSize' => $this->pageSize
+            'pageSize' => $this->pageSize,
         ]);
 
         $dataProvider = $searchModel
             ->search(Yii::$app->request->queryParams);
         $dataProvider->query
-            ->andFilterWhere(['merchant_id' => $this->getMerchantId()])
             ->andWhere(['>=', 'status', StatusEnum::DISABLED]);
 
         return $this->render($this->action->id, [

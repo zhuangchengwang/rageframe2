@@ -44,7 +44,9 @@ class Echarts extends Widget
         'yesterday' => '昨日',
         'thisWeek' => '本周',
         'thisMonth' => '本月',
-        'thisYear' => '今年'
+        'thisYear' => '本年',
+        'lastYear' => '去年',
+        'customData' => '自定义区间'
     ];
 
     /**
@@ -101,7 +103,7 @@ class Echarts extends Widget
         AppAsset::register($view);
 
         if ($this->theme == 'bmap') {
-            $view->registerJsFile('http://api.map.baidu.com/api?v=2.0&ak=' . Yii::$app->debris->config('map_baidu_ak'));
+            $view->registerJsFile('http://api.map.baidu.com/api?v=2.0&ak=' . Yii::$app->debris->backendConfig('map_baidu_ak'));
         }
     }
 }

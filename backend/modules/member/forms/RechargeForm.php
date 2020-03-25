@@ -5,8 +5,6 @@ namespace backend\modules\member\forms;
 use Yii;
 use yii\base\Model;
 use yii\web\NotFoundHttpException;
-use common\enums\AppEnum;
-use common\models\member\CreditsLog;
 use common\models\forms\CreditsLogForm;
 
 /**
@@ -99,8 +97,7 @@ class RechargeForm extends Model
             Yii::$app->services->memberCreditsLog->$action(new CreditsLogForm([
                 'member' => Yii::$app->services->member->get($member->id),
                 'num' => $num,
-                'credit_group' => AppEnum::BACKEND,
-                'credit_group_detail' => CreditsLog::CREDIT_GROUP_MANAGER,
+                'credit_group' => 'manager',
                 'remark' => !empty($this->remark) ? $this->remark : '【后台】管理员操作',
             ]));
 

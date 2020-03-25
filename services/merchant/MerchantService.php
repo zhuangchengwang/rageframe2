@@ -3,6 +3,8 @@
 namespace services\merchant;
 
 use common\components\Service;
+use common\enums\StatusEnum;
+use common\models\merchant\Merchant;
 
 /**
  * 商户
@@ -14,10 +16,8 @@ use common\components\Service;
 class MerchantService extends Service
 {
     /**
-     * @var array
+     * @var int
      */
-    protected $info = [];
-
     protected $merchant_id = 1;
 
     /**
@@ -34,24 +34,44 @@ class MerchantService extends Service
     public function setId($merchant_id)
     {
         $this->merchant_id = $merchant_id;
-        $this->setInfo($merchant_id);
-    }
-
-    /**
-     * @return array
-     */
-    public function getInfo()
-    {
-        return $this->info;
     }
 
     /**
      * @param $merchant_id
      */
-    public function setInfo($merchant_id)
+    public function addId($merchant_id)
     {
-        // TODO 查询商户是否存在,目前已经全部移动到插件
+        !$this->merchant_id && $this->merchant_id = $merchant_id;
+    }
 
-        $this->info = [];
+    /**
+     * @return int|string
+     */
+    public function getCount()
+    {
+        return Merchant::find()
+            ->select('id')
+            ->where(['>=', 'status', StatusEnum::DISABLED])
+            ->andWhere(['state' => StatusEnum::ENABLED])
+            ->count();
+    }
+
+    /**
+     * @return array|\yii\db\ActiveRecord|null
+     */
+    public function findByLogin()
+    {
+        return $this->findById($this->getId());
+    }
+
+    /**
+     * @return array|\yii\db\ActiveRecord|null
+     */
+    public function findById($id)
+    {
+        return Merchant::find()
+            ->where(['>=', 'status', StatusEnum::DISABLED])
+            ->andWhere(['id' => $id])
+            ->one();
     }
 }

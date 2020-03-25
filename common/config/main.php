@@ -1,7 +1,7 @@
 <?php
 return [
     'name' => 'RageFrame',
-    'version' => '2.3.124',
+    'version' => '2.6.10',
     'aliases' => [
         '@bower' => '@vendor/bower-asset',
         '@npm'   => '@vendor/npm-asset',
@@ -84,6 +84,14 @@ return [
         'pay' => [
             'class' => 'common\components\Pay',
         ],
+        /** ------ 上传组件 ------ **/
+        'uploadDrive' => [
+            'class' => 'common\components\UploadDrive',
+        ],
+        /** ------ 快递查询 ------ **/
+        'logistics' => [
+            'class' => 'common\components\Logistics',
+        ],
         /** ------ 二维码 ------ **/
         'qr' => [
             'class' => '\Da\QrCode\Component\QrCodeComponent',
@@ -91,19 +99,13 @@ return [
         ],
         /** ------ 微信SDK ------ **/
         'wechat' => [
-            'class' => 'jianyan\easywechat\Wechat',
+            'class' => 'common\components\Wechat',
             'userOptions' => [],  // 用户身份类参数
             'sessionParam' => 'wechatUser', // 微信用户信息将存储在会话在这个密钥
             'returnUrlParam' => '_wechatReturnUrl', // returnUrl 存储在会话中
             'rebinds' => [
                 'cache' => 'common\components\WechatCache',
             ]
-        ],
-    ],
-    'modules' => [
-        /** ------ 插件模块 ------ **/
-        'addons' => [
-            'class' => 'common\components\AddonsModule',
         ],
     ],
 ];
