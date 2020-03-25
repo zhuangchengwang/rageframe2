@@ -24,9 +24,10 @@
 1、克隆
 
 ```
+ssh-keygen -t rsa -C "dingding@qq.com"
 cat ~/.ssh/id_rsa.pub  获取key  并在GitHub上配置 https://github.com/settings/keys
 
-git clone git@github.com:zhuangchengwang/rageframe2.git
+git clone -b dev2 git@github.com:zhuangchengwang/rageframe2.git  youprojectname
 ```
 
 2、进入目录
